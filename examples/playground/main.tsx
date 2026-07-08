@@ -2,8 +2,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import NumberFlow, { NumberFlowGroup } from '@number-flow/react';
 import type { Format as NumberFlowFormat } from '@number-flow/react';
-import Numera, { NumeraPreset } from '../src';
-import '../src/NumericText.css';
+import Numera, { NumeraPreset } from '../../src';
+import '../../src/NumericText.css';
 import './styles.css';
 
 const presets: NumeraPreset[] = ['default', 'soft', 'snappy', 'springy'];

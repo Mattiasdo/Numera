@@ -20,7 +20,7 @@ If npm returns `404`, the name is available at that moment.
 
 ## Release Checklist
 
-1. Update `CHANGELOG.md`.
+1. Update `docs/CHANGELOG.md`.
 2. Bump the version:
 
 ```sh
