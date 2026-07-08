@@ -17,7 +17,7 @@ import {
 } from './motion';
 import { createSpringTiming } from './springTiming';
 
-export interface NumericTextControllerOptions {
+interface NumericTextControllerOptions {
   element: HTMLElement;
   value: NumericTextValue;
   locales?: Intl.LocalesArgument;
@@ -45,7 +45,7 @@ export interface NumericTextControllerOptions {
   onAnimationsFinish?: () => void;
 }
 
-export type NumericTextControllerUpdate =
+type NumericTextControllerUpdate =
   | NumericTextValue
   | (Partial<Omit<NumericTextControllerOptions, 'element'>> & { value?: NumericTextValue });
 
@@ -230,7 +230,7 @@ function appendFace(
   parent.appendChild(face);
 }
 
-export class NumericTextController {
+class NumericTextController {
   private options: NumericTextControllerOptions;
   private previousParts: NumericTextChar[] | null = null;
   private previousValue: NumericTextValue;
@@ -555,37 +555,18 @@ export class NumericTextController {
 }
 
 const NumorphController = NumericTextController;
-const NumeraController = NumericTextController;
 const NUMORPH_PRESETS = NUMERIC_TEXT_PRESETS;
-const NUMERA_PRESETS = NUMERIC_TEXT_PRESETS;
 
 export type NumorphControllerOptions = NumericTextControllerOptions;
 export type NumorphControllerUpdate = NumericTextControllerUpdate;
-export type NumeraControllerOptions = NumericTextControllerOptions;
-export type NumeraControllerUpdate = NumericTextControllerUpdate;
 
 export {
   NumorphController,
-  NumeraController,
   NUMORPH_PRESETS,
-  NUMERA_PRESETS,
-  NUMERIC_TEXT_PRESETS,
-  type NumericTextPreset as NumeraPreset,
   type NumericTextPreset as NumorphPreset,
-  type NumericTextPreset,
-  type NumericTextSpring as NumeraSpring,
   type NumericTextSpring as NumorphSpring,
-  type NumericTextSpring,
-  type NumericTextTiming as NumeraTiming,
   type NumericTextTiming as NumorphTiming,
-  type NumericTextTiming,
-  type NumericTextTrend as NumeraTrend,
   type NumericTextTrend as NumorphTrend,
-  type NumericTextTrend,
-  type NumericTextValue as NumeraValue,
   type NumericTextValue as NumorphValue,
-  type NumericTextValue,
-  type NumericTextVisualTiming as NumeraVisualTiming,
   type NumericTextVisualTiming as NumorphVisualTiming,
-  type NumericTextVisualTiming,
 };

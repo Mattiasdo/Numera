@@ -1,6 +1,6 @@
 {
   "name": "numorph",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Animated number text for React with rolling digits and formatted parts.",
   "type": "module",
   "license": "MIT",
@@ -55,10 +55,7 @@
       "require": "./dist/vanilla.cjs"
     },
     "./style.css": "./dist/index.css",
-    "./vanilla.css": "./dist/vanilla.css",
-    "./Numorph.css": "./dist/index.css",
-    "./Numera.css": "./dist/index.css",
-    "./NumericText.css": "./dist/index.css"
+    "./vanilla.css": "./dist/vanilla.css"
   },
   "scripts": {
     "build": "tsup",

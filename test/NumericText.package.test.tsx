@@ -22,17 +22,15 @@ describe('Numorph package surface', () => {
   it('exports the public hook and keeps AnimatedDigit internal', () => {
     expect(typeof useCanAnimate).toBe('function');
     expect(packageExports.default).toBe(packageExports.Numorph);
-    expect(packageExports.Numera).toBe(packageExports.Numorph);
-    expect(packageExports.NumericText).toBe(packageExports.Numera);
+    expect('Numera' in packageExports).toBe(false);
+    expect('NumericText' in packageExports).toBe(false);
     expect('AnimatedDigit' in packageExports).toBe(false);
   });
 
   it('exposes a framework-free vanilla controller entry', () => {
     expect(typeof vanillaExports.NumorphController).toBe('function');
-    expect(typeof vanillaExports.NumeraController).toBe('function');
-    expect(typeof vanillaExports.NumericTextController).toBe('function');
-    expect(vanillaExports.NumorphController).toBe(vanillaExports.NumericTextController);
-    expect(vanillaExports.NumeraController).toBe(vanillaExports.NumorphController);
+    expect('NumeraController' in vanillaExports).toBe(false);
+    expect('NumericTextController' in vanillaExports).toBe(false);
     expect('NumericText' in vanillaExports).toBe(false);
     expect('useCanAnimate' in vanillaExports).toBe(false);
   });

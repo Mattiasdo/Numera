@@ -6,7 +6,7 @@ export default defineConfig({
     vanilla: 'src/vanilla.ts',
   },
   format: ['esm', 'cjs'],
-  sourcemap: true,
+  sourcemap: false,
   clean: true,
   dts: true,
   external: ['react', 'react/jsx-runtime'],
