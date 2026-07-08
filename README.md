@@ -1,6 +1,6 @@
 # Numera
 
-Dependency-free animated number text for React counters, prices, stats, OTP slots, and compact metrics.
+Dependency-free animated numbers for React counters, prices, stats, OTP slots, and compact metrics.
 
 ## Installation
 
