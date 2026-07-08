@@ -105,6 +105,10 @@ numera.update(1300);
 
 See the [full docs draft](docs/numera-docs.md) for API details, timing options, examples, and notes for specific use cases.
 
+## Security
+
+Please report security issues privately using the guidance in [.github/SECURITY.md](.github/SECURITY.md).
+
 ## Contributing
 
 Install dependencies:

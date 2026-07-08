@@ -29,6 +29,9 @@
   "sideEffects": [
     "**/*.css"
   ],
+  "overrides": {
+    "esbuild": "^0.28.1"
+  },
   "files": [
     "dist"
   ],
@@ -62,6 +65,7 @@
     "dev": "vite --host 127.0.0.1",
     "pack:dry": "npm pack --dry-run",
     "prepublishOnly": "npm run check",
+    "security": "npm audit --audit-level=moderate && npm audit signatures && npm run pack:dry",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build"
