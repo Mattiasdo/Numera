@@ -1,0 +1,88 @@
+{
+  "name": "numera",
+  "version": "0.0.0",
+  "description": "Animated number text for React with rolling digits and formatted parts.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Ludus",
+  "homepage": "https://github.com/Mattiasdo/Numera#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mattiasdo/Numera.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mattiasdo/Numera/issues"
+  },
+  "keywords": [
+    "react",
+    "number",
+    "counter",
+    "animation",
+    "numeric",
+    "text",
+    "otp",
+    "spring",
+    "typescript",
+    "intl",
+    "number-format"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./vanilla": {
+      "types": "./dist/vanilla.d.ts",
+      "import": "./dist/vanilla.js",
+      "require": "./dist/vanilla.cjs"
+    },
+    "./style.css": "./dist/index.css",
+    "./vanilla.css": "./dist/vanilla.css",
+    "./Numera.css": "./dist/index.css",
+    "./NumericText.css": "./dist/index.css"
+  },
+  "scripts": {
+    "build": "tsup",
+    "check": "npm run typecheck && npm test && npm run build",
+    "dev": "vite --host 127.0.0.1",
+    "pack:dry": "npm pack --dry-run",
+    "prepublishOnly": "npm run check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18 <20"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@fontsource-variable/google-sans-flex": "^5.2.3",
+    "@number-flow/react": "^0.6.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "react-dom": "^19.2.7",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.3.6",
+    "vitest": "^3.2.4"
+  }
+}
