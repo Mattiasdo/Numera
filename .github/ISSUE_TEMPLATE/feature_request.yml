@@ -15,7 +15,7 @@ body:
     id: proposal
     attributes:
       label: Proposal
-      description: What should Numera support?
+      description: What should Numorph support?
     validations:
       required: true
   - type: textarea

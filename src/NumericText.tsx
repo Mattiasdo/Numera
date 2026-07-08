@@ -733,6 +733,6 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
   }
 );
 
-NumericText.displayName = 'Numera';
+NumericText.displayName = 'Numorph';
 
 export default NumericText;

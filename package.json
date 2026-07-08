@@ -1,17 +1,17 @@
 {
-  "name": "numera",
-  "version": "0.0.0",
+  "name": "numorph",
+  "version": "0.1.0",
   "description": "Animated number text for React with rolling digits and formatted parts.",
   "type": "module",
   "license": "MIT",
   "author": "Mattiasdo",
-  "homepage": "https://github.com/Mattiasdo/Numera#readme",
+  "homepage": "https://github.com/Mattiasdo/Numorph#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Mattiasdo/Numera.git"
+    "url": "git+https://github.com/Mattiasdo/Numorph.git"
   },
   "bugs": {
-    "url": "https://github.com/Mattiasdo/Numera/issues"
+    "url": "https://github.com/Mattiasdo/Numorph/issues"
   },
   "keywords": [
     "react",
@@ -56,6 +56,7 @@
     },
     "./style.css": "./dist/index.css",
     "./vanilla.css": "./dist/vanilla.css",
+    "./Numorph.css": "./dist/index.css",
     "./Numera.css": "./dist/index.css",
     "./NumericText.css": "./dist/index.css"
   },

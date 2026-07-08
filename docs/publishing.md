@@ -1,4 +1,4 @@
-# Publishing Numera
+# Publishing Numorph
 
 ## First-Time Setup
 
@@ -13,7 +13,7 @@ npm whoami
 3. Confirm the package name is still available:
 
 ```sh
-npm view numera
+npm view numorph
 ```
 
 If npm returns `404`, the name is available at that moment.
@@ -51,10 +51,10 @@ git push origin main --tags
 ## Recommended Imports
 
 ```tsx
-import Numera from 'numera';
-import 'numera/style.css';
+import Numorph from 'numorph';
+import 'numorph/style.css';
 ```
 
 ```ts
-import { NumeraController } from 'numera/vanilla';
+import { NumorphController } from 'numorph/vanilla';
 ```

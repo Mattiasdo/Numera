@@ -554,26 +554,38 @@ export class NumericTextController {
   }
 }
 
+const NumorphController = NumericTextController;
 const NumeraController = NumericTextController;
+const NUMORPH_PRESETS = NUMERIC_TEXT_PRESETS;
 const NUMERA_PRESETS = NUMERIC_TEXT_PRESETS;
 
+export type NumorphControllerOptions = NumericTextControllerOptions;
+export type NumorphControllerUpdate = NumericTextControllerUpdate;
 export type NumeraControllerOptions = NumericTextControllerOptions;
 export type NumeraControllerUpdate = NumericTextControllerUpdate;
 
 export {
+  NumorphController,
   NumeraController,
+  NUMORPH_PRESETS,
   NUMERA_PRESETS,
   NUMERIC_TEXT_PRESETS,
   type NumericTextPreset as NumeraPreset,
+  type NumericTextPreset as NumorphPreset,
   type NumericTextPreset,
   type NumericTextSpring as NumeraSpring,
+  type NumericTextSpring as NumorphSpring,
   type NumericTextSpring,
   type NumericTextTiming as NumeraTiming,
+  type NumericTextTiming as NumorphTiming,
   type NumericTextTiming,
   type NumericTextTrend as NumeraTrend,
+  type NumericTextTrend as NumorphTrend,
   type NumericTextTrend,
   type NumericTextValue as NumeraValue,
+  type NumericTextValue as NumorphValue,
   type NumericTextValue,
   type NumericTextVisualTiming as NumeraVisualTiming,
+  type NumericTextVisualTiming as NumorphVisualTiming,
   type NumericTextVisualTiming,
 };

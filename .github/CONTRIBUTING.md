@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Numera.
+Thanks for helping improve Numorph.
 
 ## Local Setup
 
@@ -19,7 +19,7 @@ Run the playground:
 npm run dev
 ```
 
-Open the printed local URL and use the Numera and NumberFlow examples to compare behavior.
+Open the printed local URL and use the Numorph and NumberFlow examples to compare behavior.
 
 ## Before Opening A Pull Request
 

@@ -1,11 +1,11 @@
-# Numera
+# Numorph
 
 Dependency-free animated number text for React counters, prices, stats, OTP slots, and compact metrics.
 
 ## Installation
 
 ```sh
-npm install numera
+npm install numorph
 ```
 
 `react` is the only peer dependency.
@@ -13,22 +13,22 @@ npm install numera
 ## Usage
 
 ```tsx
-import Numera from 'numera';
-import 'numera/style.css';
+import Numorph from 'numorph';
+import 'numorph/style.css';
 
-<Numera value={123456} />;
+<Numorph value={123456} />;
 ```
 
 Use `Intl.NumberFormat` options for currency, compact notation, percentages, signs, decimals, and locale-aware separators:
 
 ```tsx
-<Numera
+<Numorph
   value={79187}
   locales="en-US"
   format={{ style: 'currency', currency: 'USD' }}
 />;
 
-<Numera
+<Numorph
   value={3300000}
   format={{ notation: 'compact', maximumFractionDigits: 1 }}
   suffix=" views"
@@ -37,10 +37,10 @@ Use `Intl.NumberFormat` options for currency, compact notation, percentages, sig
 
 ## Animated Parts
 
-Numera animates formatted number parts as first-class pieces. Digits roll, separators move, and symbols like `$`, `,`, `.`, `%`, `+`, `-`, compact labels, prefixes, and suffixes can enter, exit, or crossfade with the number.
+Numorph animates formatted number parts as first-class pieces. Digits roll, separators move, and symbols like `$`, `,`, `.`, `%`, `+`, `-`, compact labels, prefixes, and suffixes can enter, exit, or crossfade with the number.
 
 ```tsx
-<Numera
+<Numorph
   value={temperature}
   format={{ signDisplay: 'exceptZero', maximumFractionDigits: 1 }}
   suffix=" deg"
@@ -52,15 +52,15 @@ Numera animates formatted number parts as first-class pieces. Digits roll, separ
 Use presets for quick tuning:
 
 ```tsx
-<Numera value={score} preset="soft" />;
-<Numera value={score} preset="snappy" />;
-<Numera value={score} preset="springy" />;
+<Numorph value={score} preset="soft" />;
+<Numorph value={score} preset="snappy" />;
+<Numorph value={score} preset="springy" />;
 ```
 
 Or pass timing options directly. Springs are generated as CSS timing functions, so there is no runtime animation dependency.
 
 ```tsx
-<Numera
+<Numorph
   value={score}
   timing={{
     duration: 420,
@@ -71,14 +71,14 @@ Or pass timing options directly. Springs are generated as CSS timing functions, 
 
 ## Fixed Slots
 
-Use `Numera` directly for OTP and code-input slots. Give each slot a stable width, disable layout correction, and pass `animationKey` when the visible state changes even if the displayed number is still `0`.
+Use `Numorph` directly for OTP and code-input slots. Give each slot a stable width, disable layout correction, and pass `animationKey` when the visible state changes even if the displayed number is still `0`.
 
 ```tsx
 const digit = code[index] ?? '';
 const isFilled = digit.length > 0;
 const displayDigit = isFilled ? Number(digit) : 0;
 
-<Numera
+<Numorph
   value={displayDigit}
   preset="soft"
   trend={isFilled ? 'up' : 'down'}
@@ -90,20 +90,20 @@ const displayDigit = isFilled ? Number(digit) : 0;
 ## Vanilla Usage
 
 ```ts
-import { NumeraController } from 'numera/vanilla';
-import 'numera/vanilla.css';
+import { NumorphController } from 'numorph/vanilla';
+import 'numorph/vanilla.css';
 
-const numera = new NumeraController({
-  element: document.querySelector('[data-numera]')!,
+const numorph = new NumorphController({
+  element: document.querySelector('[data-numorph]')!,
   value: 1284,
 });
 
-numera.update(1300);
+numorph.update(1300);
 ```
 
 ## Documentation
 
-See the [full docs draft](docs/numera-docs.md) for API details, timing options, examples, and notes for specific use cases.
+See the [full docs draft](docs/numorph-docs.md) for API details, timing options, examples, and notes for specific use cases.
 
 ## Security
 
