@@ -35,27 +35,24 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "default": "./dist/index.js"
     },
     "./react": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "default": "./dist/index.js"
     },
     "./vanilla": {
       "types": "./dist/vanilla.d.ts",
-      "import": "./dist/vanilla.js",
-      "require": "./dist/vanilla.cjs"
+      "default": "./dist/vanilla.js"
     },
     "./style.css": "./dist/index.css",
-    "./vanilla.css": "./dist/vanilla.css"
+    "./vanilla.css": "./dist/index.css"
   },
   "scripts": {
     "build": "tsup",

@@ -26,6 +26,8 @@ export interface NumericTextChar {
 const DIGIT_PART_TYPES = new Set<Intl.NumberFormatPartTypes>(['integer', 'fraction']);
 
 const EMPTY_DIGIT = '\u00A0';
+const MAX_FORMATTER_CACHE_SIZE = 80;
+const formatterCache = new Map<string, Intl.NumberFormat>();
 
 const isDigitPart = (part: Intl.NumberFormatPart) => DIGIT_PART_TYPES.has(part.type);
 
@@ -55,6 +57,41 @@ const partKindFromType = (type: Intl.NumberFormatPartTypes): NumericTextPartKind
 };
 
 const toDisplayChar = (char: string) => (char === ' ' ? EMPTY_DIGIT : char);
+
+function createFormatterCacheKey(
+  locales?: Intl.LocalesArgument,
+  format?: Intl.NumberFormatOptions
+) {
+  const localeKey = Array.isArray(locales) ? locales.join('\u0001') : String(locales ?? '');
+  if (!format) return localeKey;
+
+  const formatKey = Object.keys(format)
+    .sort()
+    .map((key) => {
+      const value = format[key as keyof Intl.NumberFormatOptions];
+      return `${key}:${String(value)}`;
+    })
+    .join('\u0001');
+
+  return `${localeKey}\u0002${formatKey}`;
+}
+
+function getNumberFormatter(
+  locales?: Intl.LocalesArgument,
+  format?: Intl.NumberFormatOptions
+) {
+  const cacheKey = createFormatterCacheKey(locales, format);
+  const cached = formatterCache.get(cacheKey);
+  if (cached) return cached;
+
+  const formatter = new Intl.NumberFormat(locales, format);
+  if (formatterCache.size >= MAX_FORMATTER_CACHE_SIZE) {
+    const oldestKey = formatterCache.keys().next().value;
+    if (oldestKey !== undefined) formatterCache.delete(oldestKey);
+  }
+  formatterCache.set(cacheKey, formatter);
+  return formatter;
+}
 
 export function compareNumericTextValues(
   previous: NumericTextValue,
@@ -98,7 +135,7 @@ export function formatNumericTextParts(
   prefix?: string,
   suffix?: string
 ): NumericTextChar[] {
-  const formatter = new Intl.NumberFormat(locales, format);
+  const formatter = getNumberFormatter(locales, format);
   const parts = formatter.formatToParts(value);
   const integerDigitCount = parts.reduce((count, part) => {
     if (part.type !== 'integer') return count;

@@ -1,4 +1,3 @@
-import './NumericText.css';
 import {
   compareNumericTextValues,
   formatNumericTextParts,

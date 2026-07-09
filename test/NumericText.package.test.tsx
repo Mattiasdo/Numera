@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import Numorph, { useCanAnimate } from '../src';
+import packageJson from '../package.json';
 import * as packageExports from '../src';
 import * as vanillaExports from '../src/vanilla';
 
@@ -33,5 +34,12 @@ describe('Numorph package surface', () => {
     expect('NumericTextController' in vanillaExports).toBe(false);
     expect('NumericText' in vanillaExports).toBe(false);
     expect('useCanAnimate' in vanillaExports).toBe(false);
+  });
+
+  it('keeps package exports ESM-only and uses one shared stylesheet', () => {
+    expect(packageJson.exports['.']).not.toHaveProperty('require');
+    expect(packageJson.exports['./vanilla']).not.toHaveProperty('require');
+    expect(packageJson.exports['./style.css']).toBe('./dist/index.css');
+    expect(packageJson.exports['./vanilla.css']).toBe('./dist/index.css');
   });
 });

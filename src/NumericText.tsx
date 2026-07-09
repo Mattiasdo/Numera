@@ -476,10 +476,19 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
       const root = rootRef.current;
       if (!root) return;
 
+      if (!layoutCorrection) {
+        previousRectsRef.current = new Map();
+        previousPartsRef.current = parts;
+        previousValueRef.current = value;
+        previousAnimationKeyRef.current = animationKey;
+        hasMountedRef.current = true;
+        return;
+      }
+
       const currentRects = measureChildren(root, nodeRefs.current);
       const currentPartsById = new Map(parts.map((part) => [part.id, part]));
 
-      if (canAnimate && layoutCorrection) {
+      if (canAnimate) {
         currentRects.forEach((currentRect, id) => {
           const currentPart = currentPartsById.get(id);
           if (!currentPart) return;

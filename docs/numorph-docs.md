@@ -331,7 +331,7 @@ Use `prefix` and `suffix` when the text should participate in Numorph layout and
 
 When formatting changes the width of a number, stable parts can shift position. Layout correction measures those stable parts and animates their movement, which prevents commas, decimal points, suffixes, and units from feeling disconnected from the number.
 
-Disable it when the parent owns a fixed layout:
+Disable it when the parent owns a fixed layout. This also skips Numorph's layout measurement work for that instance:
 
 ```tsx
 <Numorph value={digit} layoutCorrection={false} />
