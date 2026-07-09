@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createSpringTiming } from './springTiming';
 
 export type AnimatedDigitDirection = 'up' | 'down' | 'neutral';
@@ -46,9 +46,6 @@ const DEFAULT_SPRING: AnimatedDigitSpring = {
   damping: 42,
   mass: 0.82,
 };
-const useIsomorphicLayoutEffect =
-  typeof window === 'undefined' ? useEffect : useLayoutEffect;
-
 function toCssLength(value: number | string, unit = 'px') {
   return typeof value === 'number' ? `${value}${unit}` : value;
 }
@@ -83,7 +80,6 @@ interface ActiveDigitAnimation {
   previousValue: string;
   animationKey?: React.Key;
   direction: AnimatedDigitDirection;
-  expiresAt: number;
 }
 
 export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProps>(
@@ -122,8 +118,6 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
     const previousValueRef = useRef(value);
     const previousAnimationKeyRef = useRef<React.Key | undefined>(animationKey);
     const hasMountedRef = useRef(false);
-    const [activeAnimation, setActiveAnimation] = useState<ActiveDigitAnimation | null>(null);
-    const activeAnimationRef = useRef<ActiveDigitAnimation | null>(null);
     const hasExplicitPreviousValue = previousValue !== undefined;
     const hasExplicitPreviousAnimationKey = previousAnimationKey !== undefined;
     const resolvedPreviousValue = previousValue ?? previousValueRef.current;
@@ -144,8 +138,6 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
     };
     const springTiming = createSpringTiming(resolvedSpring);
     const motionDuration = duration ?? springTiming.duration;
-    const now = Date.now();
-    const activeAnimationLifetime = Math.max(0, delay) + Math.max(0, motionDuration) + 500;
 
     const pendingAnimation: ActiveDigitAnimation | null = canStartAnimation
       ? {
@@ -154,29 +146,9 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
         previousValue: resolvedPreviousValue,
         animationKey,
         direction,
-        expiresAt: now + activeAnimationLifetime,
       }
       : null;
-
-    if (pendingAnimation && activeAnimationRef.current?.id !== pendingAnimation.id) {
-      activeAnimationRef.current = pendingAnimation;
-    }
-
-    const rememberedAnimationCandidate = activeAnimationRef.current ?? activeAnimation;
-    const rememberedAnimation =
-      rememberedAnimationCandidate && rememberedAnimationCandidate.expiresAt > now
-        ? rememberedAnimationCandidate
-        : null;
-
-    if (activeAnimationRef.current && activeAnimationRef.current.expiresAt <= now) {
-      activeAnimationRef.current = null;
-    }
-
-    const activeAnimationMatches =
-      rememberedAnimation &&
-      rememberedAnimation.value === value &&
-      rememberedAnimation.animationKey === animationKey;
-    const renderedAnimation = pendingAnimation ?? (activeAnimationMatches ? rememberedAnimation : null);
+    const renderedAnimation = pendingAnimation;
     const isAnimating = Boolean(renderedAnimation);
     const renderDirection = renderedAnimation?.direction ?? direction;
     const distanceCss = toCssLength(moveDistance, '%');
@@ -236,25 +208,6 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
       previousAnimationKeyRef.current = animationKey;
       hasMountedRef.current = true;
     }, [value, animationKey]);
-
-    useIsomorphicLayoutEffect(() => {
-      if (!pendingAnimation) return undefined;
-
-      activeAnimationRef.current = pendingAnimation;
-      setActiveAnimation(pendingAnimation);
-      const clearDelay = Math.max(0, delay) + Math.max(0, motionDuration) + 140;
-      const clearTimer = window.setTimeout(() => {
-        if (activeAnimationRef.current?.id === pendingAnimation.id) {
-          activeAnimationRef.current = null;
-        }
-
-        setActiveAnimation((currentAnimation) => (
-          currentAnimation?.id === pendingAnimation.id ? null : currentAnimation
-        ));
-      }, clearDelay);
-
-      return () => window.clearTimeout(clearTimer);
-    }, [delay, motionDuration, pendingAnimation?.id]);
 
     return (
       <span {...props} ref={ref} className={className} style={rootStyle}>
