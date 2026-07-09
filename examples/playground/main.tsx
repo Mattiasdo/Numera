@@ -2,11 +2,11 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import NumberFlow, { NumberFlowGroup } from '@number-flow/react';
 import type { Format as NumberFlowFormat } from '@number-flow/react';
-import Numera, { NumeraPreset } from '../../src';
+import Numorph, { NumorphPreset } from '../../src';
 import '../../src/NumericText.css';
 import './styles.css';
 
-const presets: NumeraPreset[] = ['default', 'soft', 'snappy', 'springy'];
+const presets: NumorphPreset[] = ['default', 'soft', 'snappy', 'springy'];
 const OTP_LENGTH = 6;
 const partModes = ['currency', 'positive', 'negative', 'plain'] as const;
 
@@ -72,7 +72,7 @@ function PlaygroundOTPInput({
   onChange: (value: string) => void;
   hasError: boolean;
   animate: boolean;
-  preset: NumeraPreset;
+  preset: NumorphPreset;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const boxRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -147,7 +147,7 @@ function PlaygroundOTPInput({
               data-filled={slot.isFilled ? 'true' : undefined}
               data-error={hasError ? 'true' : undefined}
             >
-              <Numera
+              <Numorph
                 value={slot.value}
                 preset={preset}
                 animate={animate}
@@ -179,7 +179,7 @@ function App() {
   const [flowPartMode, setFlowPartMode] = useState<PartMode>('currency');
   const [classCode, setClassCode] = useState('');
   const [classCodeError, setClassCodeError] = useState(false);
-  const [preset, setPreset] = useState<NumeraPreset>('default');
+  const [preset, setPreset] = useState<NumorphPreset>('default');
   const [animate, setAnimate] = useState(true);
   const [fontSettings, setFontSettings] = useState<FontSettings>({
     weight: 600,
@@ -235,14 +235,14 @@ function App() {
     <main className="page-shell" style={fontStyle}>
       <header className="topbar">
         <div className="headline">
-          <span className="badge">Numera</span>
+          <span className="badge">Numorph</span>
           <h1>Playground</h1>
           <p>Test animated number formatting, motion presets, and Google Sans Flex settings.</p>
         </div>
         <div className="toolbar" aria-label="Playground settings">
           <label className="field">
             <span>Preset</span>
-            <select value={preset} onChange={(event) => setPreset(event.target.value as NumeraPreset)}>
+            <select value={preset} onChange={(event) => setPreset(event.target.value as NumorphPreset)}>
               {presets.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -305,9 +305,9 @@ function App() {
         </div>
       </section>
 
-      <section className="panel controls" aria-label="Numera controls">
+      <section className="panel controls" aria-label="Numorph controls">
         <div className="control-title">
-          <span className="section-label">Numera Values</span>
+          <span className="section-label">Numorph Values</span>
           <p>Click a control to trigger new animated states.</p>
         </div>
         <div className="button-row">
@@ -352,15 +352,15 @@ function App() {
         </div>
       </section>
 
-      <section className="example-grid" aria-label="Numera examples">
+      <section className="example-grid" aria-label="Numorph examples">
         <article className="card example example-large">
           <span className="section-label">Score</span>
-          <Numera value={score} locales="en-US" preset={preset} animate={animate} />
+          <Numorph value={score} locales="en-US" preset={preset} animate={animate} />
         </article>
 
         <article className="card example">
           <span className="section-label">Currency</span>
-          <Numera
+          <Numorph
             value={gems}
             locales="en-US"
             format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
@@ -371,7 +371,7 @@ function App() {
 
         <article className="card example">
           <span className="section-label">Compact</span>
-          <Numera
+          <Numorph
             value={gems * 42}
             locales="en-US"
             format={{ notation: 'compact', maximumFractionDigits: 1 }}
@@ -383,7 +383,7 @@ function App() {
 
         <article className="card example">
           <span className="section-label">Percent</span>
-          <Numera
+          <Numorph
             value={percent}
             locales="en-US"
             format={{ style: 'percent', maximumFractionDigits: 1 }}
@@ -394,7 +394,7 @@ function App() {
 
         <article className="card example">
           <span className="section-label">Signed Decimal</span>
-          <Numera
+          <Numorph
             value={temperature}
             locales="en-US"
             format={{ signDisplay: 'exceptZero', minimumFractionDigits: 1, maximumFractionDigits: 1 }}
@@ -406,14 +406,14 @@ function App() {
 
         <article className="card example">
           <span className="section-label">Level Prefix</span>
-          <Numera value={Math.floor(score / 250) + 1} prefix="Level " preset={preset} animate={animate} />
+          <Numorph value={Math.floor(score / 250) + 1} prefix="Level " preset={preset} animate={animate} />
         </article>
 
         <article className="card example parts-example">
           <div>
             <span className="section-label">Animated Parts</span>
           </div>
-          <Numera
+          <Numorph
             value={partDisplayValue}
             locales="en-US"
             format={partFormat}

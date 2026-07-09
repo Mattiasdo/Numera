@@ -1,18 +1,18 @@
-# Numera Docs
+# Numorph Docs
 
 Animated React number text for counters, scores, prices, percentages, levels, OTP slots, stats, and formatted metrics.
 
-Numera is designed around a simple idea: pass a number in, and the rendered text transitions when that value changes. Digits roll vertically. Formatting parts like commas, decimal points, currency symbols, percent signs, plus/minus signs, compact labels, prefixes, and suffixes are treated as real animated parts instead of static text that users have to wrap manually.
+Numorph is designed around a simple idea: pass a number in, and the rendered text transitions when that value changes. Digits roll vertically. Formatting parts like commas, decimal points, currency symbols, percent signs, plus/minus signs, compact labels, prefixes, and suffixes are treated as real animated parts instead of static text that users have to wrap manually.
 
 ## Install
 
 ```sh
-npm install numera
+npm install numorph
 ```
 
 ```tsx
-import Numera from 'numera';
-import 'numera/style.css';
+import Numorph from 'numorph';
+import 'numorph/style.css';
 ```
 
 `react` is the only peer dependency. The package does not require Framer Motion, Motion, GSAP, or a runtime animation dependency.
@@ -21,28 +21,28 @@ import 'numera/style.css';
 
 ```tsx
 import { useState } from 'react';
-import Numera from 'numera';
-import 'numera/style.css';
+import Numorph from 'numorph';
+import 'numorph/style.css';
 
 export function ScoreExample() {
   const [score, setScore] = useState(1284);
 
   return (
     <button type="button" onClick={() => setScore((value) => value + 1)}>
-      <Numera value={score} locales="en-US" />
+      <Numorph value={score} locales="en-US" />
     </button>
   );
 }
 ```
 
-`Numera` automatically transitions when the `value` prop changes.
+`Numorph` automatically transitions when the `value` prop changes.
 
 ## Formatting
 
-Numera uses `Intl.NumberFormat` under the hood. Pass `locales` and `format` the same way you would pass them to `new Intl.NumberFormat(locales, options)`.
+Numorph uses `Intl.NumberFormat` under the hood. Pass `locales` and `format` the same way you would pass them to `new Intl.NumberFormat(locales, options)`.
 
 ```tsx
-<Numera
+<Numorph
   value={4217}
   locales="en-US"
   format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
@@ -50,7 +50,7 @@ Numera uses `Intl.NumberFormat` under the hood. Pass `locales` and `format` the 
 ```
 
 ```tsx
-<Numera
+<Numorph
   value={0.684}
   locales="en-US"
   format={{ style: 'percent', maximumFractionDigits: 1 }}
@@ -58,7 +58,7 @@ Numera uses `Intl.NumberFormat` under the hood. Pass `locales` and `format` the 
 ```
 
 ```tsx
-<Numera
+<Numorph
   value={177100}
   locales="en-US"
   format={{ notation: 'compact', maximumFractionDigits: 1 }}
@@ -79,7 +79,7 @@ Formatted non-digit parts are animated by default. For example:
 ### Score
 
 ```tsx
-<Numera value={score} locales="en-US" />
+<Numorph value={score} locales="en-US" />
 ```
 
 Use this for scores, counters, totals, and other plain numeric values.
@@ -87,7 +87,7 @@ Use this for scores, counters, totals, and other plain numeric values.
 ### Currency
 
 ```tsx
-<Numera
+<Numorph
   value={price}
   locales="en-US"
   format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
@@ -99,7 +99,7 @@ Currency symbols are animated parts. If the symbol appears or disappears because
 ### Compact Metrics
 
 ```tsx
-<Numera
+<Numorph
   value={viewCount}
   locales="en-US"
   format={{ notation: 'compact', maximumFractionDigits: 1 }}
@@ -112,7 +112,7 @@ Use this for views, likes, downloads, followers, gems, and usage metrics. Compac
 ### Percent
 
 ```tsx
-<Numera
+<Numorph
   value={progress}
   locales="en-US"
   format={{ style: 'percent', maximumFractionDigits: 1 }}
@@ -124,7 +124,7 @@ The percent symbol is aligned with the number and uses part timing rather than d
 ### Signed Decimal
 
 ```tsx
-<Numera
+<Numorph
   value={temperature}
   locales="en-US"
   format={{
@@ -141,7 +141,7 @@ Signs are first-class parts. `+` and `-` can enter, exit, or crossfade without u
 ### Level Prefix
 
 ```tsx
-<Numera value={level} prefix="Level " />
+<Numorph value={level} prefix="Level " />
 ```
 
 Use `prefix` for stable text that should move with the number. The prefix is rendered as individual parts so spacing stays connected to the digits.
@@ -149,14 +149,14 @@ Use `prefix` for stable text that should move with the number. The prefix is ren
 ### BigInt
 
 ```tsx
-<Numera value={9007199254740993n} locales="en-US" />
+<Numorph value={9007199254740993n} locales="en-US" />
 ```
 
 `value` accepts `number | bigint`.
 
 ## OTP and Fixed Slots
 
-Numera can be used directly inside fixed slots, such as OTP codes, invite codes, or verification inputs.
+Numorph can be used directly inside fixed slots, such as OTP codes, invite codes, or verification inputs.
 
 ```tsx
 const digit = code[index] ?? '';
@@ -164,7 +164,7 @@ const isFilled = digit.length > 0;
 const displayValue = isFilled ? Number(digit) : 0;
 
 <div className="otp-slot">
-  <Numera
+  <Numorph
     value={displayValue}
     preset="soft"
     trend={isFilled ? 'up' : 'down'}
@@ -174,9 +174,9 @@ const displayValue = isFilled ? Number(digit) : 0;
 </div>
 ```
 
-Use `layoutCorrection={false}` in fixed-width slots. The slot container already owns the layout, so Numera should only animate the digit inside the slot.
+Use `layoutCorrection={false}` in fixed-width slots. The slot container already owns the layout, so Numorph should only animate the digit inside the slot.
 
-Use `animationKey` when the rendered number is not enough to describe the visual state. The important OTP case is an empty slot that displays `0` and a filled slot where the user typed `0`. Both render the same number, but they are different UI states. `animationKey` tells Numera to animate the transition anyway.
+Use `animationKey` when the rendered number is not enough to describe the visual state. The important OTP case is an empty slot that displays `0` and a filled slot where the user typed `0`. Both render the same number, but they are different UI states. `animationKey` tells Numorph to animate the transition anyway.
 
 Recommended slot CSS:
 
@@ -196,9 +196,9 @@ Recommended slot CSS:
 Use presets for most cases:
 
 ```tsx
-<Numera value={score} preset="soft" />
-<Numera value={score} preset="snappy" />
-<Numera value={score} preset="springy" />
+<Numorph value={score} preset="soft" />
+<Numorph value={score} preset="snappy" />
+<Numorph value={score} preset="springy" />
 ```
 
 Available presets:
@@ -213,7 +213,7 @@ Available presets:
 For more control, use the grouped timing props:
 
 ```tsx
-<Numera
+<Numorph
   value={price}
   timing={{
     duration: 420,
@@ -223,7 +223,7 @@ For more control, use the grouped timing props:
 ```
 
 ```tsx
-<Numera
+<Numorph
   value={price}
   digitTiming={{
     duration: 420,
@@ -253,7 +253,7 @@ Timing layers:
 Each motion timing object accepts:
 
 ```ts
-type NumeraTiming = {
+type NumorphTiming = {
   duration?: number;
   easing?: string;
   spring?: {
@@ -264,15 +264,15 @@ type NumeraTiming = {
 };
 ```
 
-If `easing` is supplied, Numera uses it directly. If `spring` is supplied and no explicit easing overrides it, Numera generates a CSS easing from the spring parameters. The spring affects incoming digit motion; exit motion stays controlled by the regular easing so outgoing digits feel clean and do not bounce away.
+If `easing` is supplied, Numorph uses it directly. If `spring` is supplied and no explicit easing overrides it, Numorph generates a CSS easing from the spring parameters. The spring affects incoming digit motion; exit motion stays controlled by the regular easing so outgoing digits feel clean and do not bounce away.
 
 ## Direction
 
 ```tsx
-<Numera value={value} trend="auto" />
-<Numera value={value} trend="up" />
-<Numera value={value} trend="down" />
-<Numera value={value} trend="neutral" />
+<Numorph value={value} trend="auto" />
+<Numorph value={value} trend="up" />
+<Numorph value={value} trend="down" />
+<Numorph value={value} trend="neutral" />
 ```
 
 `trend` controls the direction of digit movement.
@@ -286,14 +286,14 @@ If `easing` is supplied, Numera uses it directly. If `spring` is supplied and no
 
 ## Animated Parts
 
-Numera splits the formatted output into stable character parts. Digits animate with digit timing. Non-digits animate with part timing.
+Numorph splits the formatted output into stable character parts. Digits animate with digit timing. Non-digits animate with part timing.
 
 This means users do not need to do this:
 
 ```tsx
 <>
   <span>$</span>
-  <Numera value={amount} />
+  <Numorph value={amount} />
   <span> views</span>
 </>
 ```
@@ -301,7 +301,7 @@ This means users do not need to do this:
 Prefer this:
 
 ```tsx
-<Numera
+<Numorph
   value={amount}
   locales="en-US"
   format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
@@ -311,7 +311,7 @@ Prefer this:
 Or:
 
 ```tsx
-<Numera
+<Numorph
   value={views}
   locales="en-US"
   format={{ notation: 'compact', maximumFractionDigits: 1 }}
@@ -319,22 +319,22 @@ Or:
 />
 ```
 
-Use `prefix` and `suffix` when the text should participate in Numera layout and animation. Use surrounding text outside of Numera when that text should not be part of the number.
+Use `prefix` and `suffix` when the text should participate in Numorph layout and animation. Use surrounding text outside of Numorph when that text should not be part of the number.
 
 ## Layout Correction
 
 `layoutCorrection` is enabled by default.
 
 ```tsx
-<Numera value={score} layoutCorrection />
+<Numorph value={score} layoutCorrection />
 ```
 
 When formatting changes the width of a number, stable parts can shift position. Layout correction measures those stable parts and animates their movement, which prevents commas, decimal points, suffixes, and units from feeling disconnected from the number.
 
-Disable it when the parent owns a fixed layout:
+Disable it when the parent owns a fixed layout. This also skips Numorph's layout measurement work for that instance:
 
 ```tsx
-<Numera value={digit} layoutCorrection={false} />
+<Numorph value={digit} layoutCorrection={false} />
 ```
 
 Good places to disable layout correction:
@@ -345,32 +345,32 @@ Good places to disable layout correction:
 
 ## Accessibility
 
-Numera renders an `aria-label` for the full plain text number. The animated internal faces are hidden from assistive technology.
+Numorph renders an `aria-label` for the full plain text number. The animated internal faces are hidden from assistive technology.
 
 ```tsx
-<Numera value={price} aria-label={`Current price is ${price} dollars`} />
+<Numorph value={price} aria-label={`Current price is ${price} dollars`} />
 ```
 
 Pass your own `aria-label` when the raw formatted number is not descriptive enough.
 
 ## Reduced Motion
 
-By default, Numera respects the user's reduced motion preference.
+By default, Numorph respects the user's reduced motion preference.
 
 ```tsx
-<Numera value={score} respectReducedMotion />
+<Numorph value={score} respectReducedMotion />
 ```
 
 To force animation regardless of the system setting:
 
 ```tsx
-<Numera value={score} respectReducedMotion={false} />
+<Numorph value={score} respectReducedMotion={false} />
 ```
 
 You can also disable animations manually:
 
 ```tsx
-<Numera value={score} animate={false} />
+<Numorph value={score} animate={false} />
 ```
 
 `animate={false}` is useful for static previews, tests, and places where the number is updating too frequently for motion to be helpful.
@@ -378,7 +378,7 @@ You can also disable animations manually:
 ## Callbacks
 
 ```tsx
-<Numera
+<Numorph
   value={score}
   onAnimationsStart={() => {
     console.log('animation started');
@@ -393,7 +393,7 @@ Use callbacks for sound effects, analytics, haptics, or chaining a secondary UI 
 
 ## Styling
 
-Numera inherits font styles from its parent.
+Numorph inherits font styles from its parent.
 
 ```css
 .stat {
@@ -407,16 +407,16 @@ Numera inherits font styles from its parent.
 
 ```tsx
 <div className="stat">
-  <Numera value={score} locales="en-US" />
+  <Numorph value={score} locales="en-US" />
 </div>
 ```
 
 Use `font-variant-numeric: tabular-nums` when consistent digit widths matter. This reduces horizontal shifting during transitions and is especially useful in dashboards, tables, scoreboards, and OTP slots.
 
-Numera exports CSS separately so apps can decide where to load it:
+Numorph exports CSS separately so apps can decide where to load it:
 
 ```tsx
-import 'numera/style.css';
+import 'numorph/style.css';
 ```
 
 ## Performance Notes
@@ -424,19 +424,19 @@ import 'numera/style.css';
 Use `willChange` only when a number changes frequently and you have confirmed it helps:
 
 ```tsx
-<Numera value={score} willChange />
+<Numorph value={score} willChange />
 ```
 
 `will-change` can improve animation smoothness in the right place, but it can increase memory usage if applied broadly.
 
-Numera preserves active slot animations across unrelated parent renders. This matters for UI like OTP inputs, where the digit changes and the active focus ring may re-render immediately afterward. Users do not need to manage previous digits manually.
+Numorph preserves active slot animations across unrelated parent renders. This matters for UI like OTP inputs, where the digit changes and the active focus ring may re-render immediately afterward. Users do not need to manage previous digits manually.
 
 ## API Reference
 
 ```ts
-type NumeraValue = number | bigint;
-type NumeraTrend = 'auto' | 'up' | 'down' | 'neutral';
-type NumeraPreset = 'default' | 'soft' | 'snappy' | 'springy';
+type NumorphValue = number | bigint;
+type NumorphTrend = 'auto' | 'up' | 'down' | 'neutral';
+type NumorphPreset = 'default' | 'soft' | 'snappy' | 'springy';
 ```
 
 | Prop | Type | Default | Notes |
@@ -446,29 +446,29 @@ type NumeraPreset = 'default' | 'soft' | 'snappy' | 'springy';
 | `format` | `Intl.NumberFormatOptions` | `undefined` | Passed to `Intl.NumberFormat`. |
 | `prefix` | `string` | `undefined` | Stable text before the formatted number. |
 | `suffix` | `string` | `undefined` | Stable text after the formatted number. |
-| `preset` | `NumeraPreset` | `default` | Motion preset. |
-| `trend` | `NumeraTrend` | `auto` | Direction of digit movement. |
-| `timing` | `NumeraTiming` | Preset timing | Shared timing override. |
-| `digitTiming` | `NumeraTiming` | `timing` | Overrides digit motion. |
-| `partTiming` | `NumeraTiming` | `timing` | Overrides non-digit part motion. |
-| `layoutTiming` | `NumeraTiming` | `timing` | Overrides layout correction motion. |
-| `opacityTiming` | `NumeraVisualTiming` | Derived from timing | Overrides opacity and blur timing. |
+| `preset` | `NumorphPreset` | `default` | Motion preset. |
+| `trend` | `NumorphTrend` | `auto` | Direction of digit movement. |
+| `timing` | `NumorphTiming` | Preset timing | Shared timing override. |
+| `digitTiming` | `NumorphTiming` | `timing` | Overrides digit motion. |
+| `partTiming` | `NumorphTiming` | `timing` | Overrides non-digit part motion. |
+| `layoutTiming` | `NumorphTiming` | `timing` | Overrides layout correction motion. |
+| `opacityTiming` | `NumorphVisualTiming` | Derived from timing | Overrides opacity and blur timing. |
 | `duration` | `number` | Preset duration | Convenience shorthand for base duration. |
 | `stagger` | `number` | Preset stagger | Delay between digit animations. |
 | `easing` | `string` | Preset easing | Convenience shorthand for base easing. |
 | `blur` | `number | string` | Preset blur | Blur amount for entering/exiting content. |
 | `moveDistance` | `number | string` | Preset distance | Vertical movement distance. |
-| `spring` | `Partial<NumeraSpring>` | Preset spring | Convenience shorthand for base spring params. |
+| `spring` | `Partial<NumorphSpring>` | Preset spring | Convenience shorthand for base spring params. |
 | `layoutCorrection` | `boolean` | `true` | Animates stable parts when their position changes. |
 | `animationKey` | `React.Key` | `undefined` | Forces a visual transition when value alone is not enough. |
 | `animate` | `boolean` | `true` | Enables or disables animation. |
 | `isolate` | `boolean` | `false` | Applies CSS isolation to the root. |
 | `willChange` | `boolean` | `false` | Applies will-change hints to animated faces. |
 | `respectReducedMotion` | `boolean` | `true` | Disables motion when the user prefers reduced motion. |
-| `onAnimationsStart` | `() => void` | `undefined` | Fires when Numera starts update animations. |
+| `onAnimationsStart` | `() => void` | `undefined` | Fires when Numorph starts update animations. |
 | `onAnimationsFinish` | `() => void` | `undefined` | Fires after update animations are expected to finish. |
 
-Numera also accepts normal `span` attributes like `className`, `style`, `id`, and `aria-label`.
+Numorph also accepts normal `span` attributes like `className`, `style`, `id`, and `aria-label`.
 
 ## Use Case Notes
 
@@ -477,7 +477,7 @@ Numera also accepts normal `span` attributes like `className`, `style`, `id`, an
 Use `animationKey` when the displayed text does not change but the visual state should still animate.
 
 ```tsx
-<Numera
+<Numorph
   value={isFilled ? Number(digit) : 0}
   animationKey={isFilled ? `filled:${digit}` : 'empty'}
 />
@@ -491,7 +491,7 @@ Common cases:
 
 ### Fast Updates and Spamming
 
-Numera keeps active animations alive through unrelated re-renders. It does not currently queue every intermediate value. If a value changes extremely quickly, the latest value wins, and any still-active slot animation is preserved only when it still matches the latest rendered character.
+Numorph keeps active animations alive through unrelated re-renders. It does not currently queue every intermediate value. If a value changes extremely quickly, the latest value wins, and any still-active slot animation is preserved only when it still matches the latest rendered character.
 
 For very high-frequency values, consider:
 
@@ -517,14 +517,14 @@ This is usually the easiest way to prevent width jitter.
 When changing `format`, `prefix`, or `suffix` at the same time as `value`, consider adding an `animationKey` that represents the display mode.
 
 ```tsx
-<Numera
+<Numorph
   value={amount}
   format={mode === 'currency' ? currencyFormat : decimalFormat}
   animationKey={`${mode}:${amount}`}
 />
 ```
 
-This helps Numera treat semantic mode changes as animation-worthy changes.
+This helps Numorph treat semantic mode changes as animation-worthy changes.
 
 ### Fixed Containers
 
@@ -540,7 +540,7 @@ For fixed containers, let the parent provide dimensions:
 
 ```tsx
 <div className="score-cell">
-  <Numera value={score} layoutCorrection={false} />
+  <Numorph value={score} layoutCorrection={false} />
 </div>
 ```
 
@@ -549,10 +549,10 @@ For fixed containers, let the parent provide dimensions:
 These notes are for our future docs/site direction.
 
 - NumberFlow's docs do a good job of making each prop concrete with a small example. It documents `format`, `locales`, `prefix`, `suffix`, timing layers, `trend`, animation toggles, reduced motion, callbacks, styling, grouping, hooks, and limitations.
-- NumberFlow splits timing into transform/spin/opacity concerns. Numera's equivalent is `layoutTiming`, `digitTiming`, `partTiming`, and `opacityTiming`.
-- NumberFlow calls out tabular numbers and reduced motion. Numera docs should do the same because those are real production details.
-- Torph's docs are clean about dependency-free positioning, framework entry points, and spring params. Numera should keep its React-first quick start just as direct, and the spring section should stay easy to scan.
-- Torph allows spring parameters through `ease`; Numera exposes spring parameters through `timing`, `digitTiming`, `partTiming`, `layoutTiming`, or the shorthand `spring`.
+- NumberFlow splits timing into transform/spin/opacity concerns. Numorph's equivalent is `layoutTiming`, `digitTiming`, `partTiming`, and `opacityTiming`.
+- NumberFlow calls out tabular numbers and reduced motion. Numorph docs should do the same because those are real production details.
+- Torph's docs are clean about dependency-free positioning, framework entry points, and spring params. Numorph should keep its React-first quick start just as direct, and the spring section should stay easy to scan.
+- Torph allows spring parameters through `ease`; Numorph exposes spring parameters through `timing`, `digitTiming`, `partTiming`, `layoutTiming`, or the shorthand `spring`.
 
 Reference docs reviewed:
 
@@ -562,9 +562,9 @@ Reference docs reviewed:
 
 ## Current Limitations
 
-- Numera is currently React-only.
+- Numorph is currently React-only.
 - Scientific and engineering notation have not been tested as first-class use cases.
 - Non-Latin digits and RTL locales need explicit testing before being documented as supported.
 - The package currently ships CSS that must be imported by the app.
 - There is not yet a headless hook for fully custom rendering.
-- There is not yet a grouping component for syncing multiple Numera instances that affect each other's layout.
+- There is not yet a grouping component for syncing multiple Numorph instances that affect each other's layout.

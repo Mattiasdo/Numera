@@ -96,6 +96,7 @@ const DEFAULT_BLUR = 4.25;
 const DEFAULT_SCALE = 0.8;
 const DEFAULT_MOVE_DISTANCE = '0.42em';
 const EMPTY_FACE = '\u00A0';
+const STALE_LAYOUT_SNAPSHOT_MS = 60_000;
 const useIsomorphicLayoutEffect =
   typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
@@ -338,6 +339,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
     const previousAnimationKeyRef = useRef<React.Key | undefined>(animationKey);
     const previousPartsRef = useRef<NumericTextChar[] | null>(null);
     const previousRectsRef = useRef(new Map<string, NumericTextRect>());
+    const lastLayoutCommitRef = useRef(Date.now());
     const activeSlotAnimationsRef = useRef(new Map<string, ActiveSlotAnimation>());
     const hasMountedRef = useRef(false);
     const motionPreset = NUMERIC_TEXT_PRESETS[preset] ?? NUMERIC_TEXT_PRESETS.default;
@@ -386,6 +388,11 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
     const distance = resolvedMoveDistance;
     const shouldAnimateStableSlots = animationKeyChanged && !formattedPartsChanged;
     const now = Date.now();
+    const hasStaleLayoutSnapshot =
+      hasMountedRef.current && now - lastLayoutCommitRef.current > STALE_LAYOUT_SNAPSHOT_MS;
+    if (hasStaleLayoutSnapshot) {
+      activeSlotAnimationsRef.current.clear();
+    }
     const activeAnimationLifetime =
       Math.max(resolvedDigitTiming.duration, resolvedPartTiming.duration) +
       Math.max(0, parts.length - 1) * resolvedStagger +
@@ -457,7 +464,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
         .filter((part) => !nextIds.has(part.id))
         .reverse()
         .map((part, index) => {
-          const rect = previousRectsRef.current.get(part.id);
+          const rect = hasStaleLayoutSnapshot ? undefined : previousRectsRef.current.get(part.id);
           if (!rect) return null;
 
           return {
@@ -476,10 +483,20 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
       const root = rootRef.current;
       if (!root) return;
 
+      if (!layoutCorrection) {
+        previousRectsRef.current = new Map();
+        previousPartsRef.current = parts;
+        previousValueRef.current = value;
+        previousAnimationKeyRef.current = animationKey;
+        lastLayoutCommitRef.current = Date.now();
+        hasMountedRef.current = true;
+        return;
+      }
+
       const currentRects = measureChildren(root, nodeRefs.current);
       const currentPartsById = new Map(parts.map((part) => [part.id, part]));
 
-      if (canAnimate && layoutCorrection) {
+      if (canAnimate) {
         currentRects.forEach((currentRect, id) => {
           const currentPart = currentPartsById.get(id);
           if (!currentPart) return;
@@ -500,6 +517,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
       previousPartsRef.current = parts;
       previousValueRef.current = value;
       previousAnimationKeyRef.current = animationKey;
+      lastLayoutCommitRef.current = Date.now();
       hasMountedRef.current = true;
     }, [
       animationKey,
@@ -733,6 +751,6 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
   }
 );
 
-NumericText.displayName = 'Numera';
+NumericText.displayName = 'Numorph';
 
 export default NumericText;

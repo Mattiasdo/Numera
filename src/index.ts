@@ -1,29 +1,25 @@
 import NumericText from './NumericText';
 import { NUMERIC_TEXT_PRESETS } from './motion';
 
-const Numera = NumericText;
-const NUMERA_PRESETS = NUMERIC_TEXT_PRESETS;
+const Numorph = NumericText;
+const NUMORPH_PRESETS = NUMERIC_TEXT_PRESETS;
 
-export { Numera, NumericText, NUMERA_PRESETS, NUMERIC_TEXT_PRESETS };
-export default Numera;
+export { Numorph, NUMORPH_PRESETS };
+export default Numorph;
 export { useCanAnimate } from './useCanAnimate';
-export type { NumericTextProps, NumericTextProps as NumeraProps } from './NumericText';
 export type {
-  NumericTextMotionPreset,
-  NumericTextMotionPreset as NumeraMotionPreset,
-  NumericTextPreset,
-  NumericTextPreset as NumeraPreset,
-  NumericTextSpring,
-  NumericTextSpring as NumeraSpring,
-  NumericTextTiming,
-  NumericTextTiming as NumeraTiming,
-  NumericTextVisualTiming,
-  NumericTextVisualTiming as NumeraVisualTiming,
+  NumericTextProps,
+  NumericTextProps as NumorphProps,
+} from './NumericText';
+export type {
+  NumericTextMotionPreset as NumorphMotionPreset,
+  NumericTextPreset as NumorphPreset,
+  NumericTextSpring as NumorphSpring,
+  NumericTextTiming as NumorphTiming,
+  NumericTextVisualTiming as NumorphVisualTiming,
 } from './motion';
 export type {
-  NumericTextTrend,
-  NumericTextTrend as NumeraTrend,
-  NumericTextValue,
-  NumericTextValue as NumeraValue,
+  NumericTextTrend as NumorphTrend,
+  NumericTextValue as NumorphValue,
 } from './formatNumericText';
 export type { UseCanAnimateOptions } from './useCanAnimate';

@@ -1,4 +1,3 @@
-import './NumericText.css';
 import {
   compareNumericTextValues,
   formatNumericTextParts,
@@ -17,7 +16,7 @@ import {
 } from './motion';
 import { createSpringTiming } from './springTiming';
 
-export interface NumericTextControllerOptions {
+interface NumericTextControllerOptions {
   element: HTMLElement;
   value: NumericTextValue;
   locales?: Intl.LocalesArgument;
@@ -45,7 +44,7 @@ export interface NumericTextControllerOptions {
   onAnimationsFinish?: () => void;
 }
 
-export type NumericTextControllerUpdate =
+type NumericTextControllerUpdate =
   | NumericTextValue
   | (Partial<Omit<NumericTextControllerOptions, 'element'>> & { value?: NumericTextValue });
 
@@ -230,7 +229,7 @@ function appendFace(
   parent.appendChild(face);
 }
 
-export class NumericTextController {
+class NumericTextController {
   private options: NumericTextControllerOptions;
   private previousParts: NumericTextChar[] | null = null;
   private previousValue: NumericTextValue;
@@ -554,26 +553,19 @@ export class NumericTextController {
   }
 }
 
-const NumeraController = NumericTextController;
-const NUMERA_PRESETS = NUMERIC_TEXT_PRESETS;
+const NumorphController = NumericTextController;
+const NUMORPH_PRESETS = NUMERIC_TEXT_PRESETS;
 
-export type NumeraControllerOptions = NumericTextControllerOptions;
-export type NumeraControllerUpdate = NumericTextControllerUpdate;
+export type NumorphControllerOptions = NumericTextControllerOptions;
+export type NumorphControllerUpdate = NumericTextControllerUpdate;
 
 export {
-  NumeraController,
-  NUMERA_PRESETS,
-  NUMERIC_TEXT_PRESETS,
-  type NumericTextPreset as NumeraPreset,
-  type NumericTextPreset,
-  type NumericTextSpring as NumeraSpring,
-  type NumericTextSpring,
-  type NumericTextTiming as NumeraTiming,
-  type NumericTextTiming,
-  type NumericTextTrend as NumeraTrend,
-  type NumericTextTrend,
-  type NumericTextValue as NumeraValue,
-  type NumericTextValue,
-  type NumericTextVisualTiming as NumeraVisualTiming,
-  type NumericTextVisualTiming,
+  NumorphController,
+  NUMORPH_PRESETS,
+  type NumericTextPreset as NumorphPreset,
+  type NumericTextSpring as NumorphSpring,
+  type NumericTextTiming as NumorphTiming,
+  type NumericTextTrend as NumorphTrend,
+  type NumericTextValue as NumorphValue,
+  type NumericTextVisualTiming as NumorphVisualTiming,
 };
