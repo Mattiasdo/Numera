@@ -1,10 +1,8 @@
 import NumericText from './NumericText';
-import { NUMERIC_TEXT_PRESETS } from './motion';
 
 const Numorph = NumericText;
-const NUMORPH_PRESETS = NUMERIC_TEXT_PRESETS;
 
-export { Numorph, NUMORPH_PRESETS };
+export { Numorph };
 export default Numorph;
 export { useCanAnimate } from './useCanAnimate';
 export type {
@@ -12,8 +10,7 @@ export type {
   NumericTextProps as NumorphProps,
 } from './NumericText';
 export type {
-  NumericTextMotionPreset as NumorphMotionPreset,
-  NumericTextPreset as NumorphPreset,
+  NumericTextMotion as NumorphMotion,
   NumericTextSpring as NumorphSpring,
   NumericTextTiming as NumorphTiming,
   NumericTextVisualTiming as NumorphVisualTiming,

@@ -1,12 +1,3 @@
-@font-face {
-  font-family: "Google Sans Flex Variable";
-  font-style: oblique 0deg 10deg;
-  font-display: swap;
-  font-weight: 1 1000;
-  font-stretch: 25% 151%;
-  src: url("../node_modules/@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-full-normal.woff2") format("woff2-variations");
-}
-
 :root {
   color-scheme: dark;
   --background: 240 10% 3.9%;
@@ -69,7 +60,7 @@ input[type="range"] {
   --demo-font-weight: 600;
   --demo-font-width: 100%;
   --demo-font-grade: 0;
-  --demo-font-roundness: 40;
+  --demo-font-roundness: 100;
   --demo-font-optical-size: 44;
 
   width: min(1160px, calc(100% - 40px));

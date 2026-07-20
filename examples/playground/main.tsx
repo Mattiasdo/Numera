@@ -2,13 +2,20 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import NumberFlow, { NumberFlowGroup } from '@number-flow/react';
 import type { Format as NumberFlowFormat } from '@number-flow/react';
-import Numorph, { NumorphPreset } from '../../src';
+import '@fontsource-variable/google-sans-flex/full.css';
+import Numorph from '../../src';
 import '../../src/NumericText.css';
 import './styles.css';
 
-const presets: NumorphPreset[] = ['default', 'soft', 'snappy', 'springy'];
 const OTP_LENGTH = 6;
 const partModes = ['currency', 'positive', 'negative', 'plain'] as const;
+const NUMBER_FLOW_SLOW_MOTION_PROPS = {
+  transformTiming: { duration: 2600, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+  spinTiming: { duration: 2600, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+  opacityTiming: { duration: 1800, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+};
+const NO_SLOW_MOTION_PROPS = {};
+const NUMORPH_SLOW_MOTION_PROPS = { duration: 3600, stagger: 140 };
 
 type PartMode = (typeof partModes)[number];
 
@@ -66,13 +73,13 @@ function PlaygroundOTPInput({
   onChange,
   hasError,
   animate,
-  preset,
+  slowMotion,
 }: {
   value: string;
   onChange: (value: string) => void;
   hasError: boolean;
   animate: boolean;
-  preset: NumorphPreset;
+  slowMotion: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const boxRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -90,6 +97,7 @@ function PlaygroundOTPInput({
     };
   });
   const activeIndex = Math.min(value.length, OTP_LENGTH - 1);
+  const slowMotionProps = slowMotion ? NUMORPH_SLOW_MOTION_PROPS : NO_SLOW_MOTION_PROPS;
 
   const normalizeCode = (nextValue: string) => nextValue.replace(/\D/g, '').slice(0, OTP_LENGTH);
   const focusInput = () => inputRef.current?.focus();
@@ -148,8 +156,8 @@ function PlaygroundOTPInput({
               data-error={hasError ? 'true' : undefined}
             >
               <Numorph
+                {...slowMotionProps}
                 value={slot.value}
-                preset={preset}
                 animate={animate}
                 trend={slot.isFilled ? 'up' : 'down'}
                 animationKey={slot.animationKey}
@@ -179,12 +187,12 @@ function App() {
   const [flowPartMode, setFlowPartMode] = useState<PartMode>('currency');
   const [classCode, setClassCode] = useState('');
   const [classCodeError, setClassCodeError] = useState(false);
-  const [preset, setPreset] = useState<NumorphPreset>('default');
   const [animate, setAnimate] = useState(true);
+  const [slowMotion, setSlowMotion] = useState(false);
   const [fontSettings, setFontSettings] = useState<FontSettings>({
     weight: 600,
     width: 100,
-    roundness: 40,
+    roundness: 100,
     grade: 0,
     opticalSize: 44,
   });
@@ -223,6 +231,12 @@ function App() {
         ? { signDisplay: 'always', maximumFractionDigits: 0 }
         : { maximumFractionDigits: 0 };
   const flowPartSuffix = flowPartMode === 'plain' ? ' pts' : undefined;
+  const numorphSlowMotionProps = slowMotion
+    ? NUMORPH_SLOW_MOTION_PROPS
+    : NO_SLOW_MOTION_PROPS;
+  const numberFlowSlowMotionProps = slowMotion
+    ? NUMBER_FLOW_SLOW_MOTION_PROPS
+    : NO_SLOW_MOTION_PROPS;
   const fontStyle = {
     '--demo-font-weight': fontSettings.weight,
     '--demo-font-width': `${fontSettings.width}%`,
@@ -237,19 +251,9 @@ function App() {
         <div className="headline">
           <span className="badge">Numorph</span>
           <h1>Playground</h1>
-          <p>Test animated number formatting, motion presets, and Google Sans Flex settings.</p>
+          <p>Test animated number formatting, motion controls, and Google Sans Flex settings.</p>
         </div>
         <div className="toolbar" aria-label="Playground settings">
-          <label className="field">
-            <span>Preset</span>
-            <select value={preset} onChange={(event) => setPreset(event.target.value as NumorphPreset)}>
-              {presets.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className="toggle">
             <input
               type="checkbox"
@@ -257,6 +261,14 @@ function App() {
               onChange={(event) => setAnimate(event.target.checked)}
             />
             <span>Animate</span>
+          </label>
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={slowMotion}
+              onChange={(event) => setSlowMotion(event.target.checked)}
+            />
+            <span>Slow motion</span>
           </label>
         </div>
       </header>
@@ -355,16 +367,16 @@ function App() {
       <section className="example-grid" aria-label="Numorph examples">
         <article className="card example example-large">
           <span className="section-label">Score</span>
-          <Numorph value={score} locales="en-US" preset={preset} animate={animate} />
+          <Numorph {...numorphSlowMotionProps} value={score} locales="en-US" animate={animate} />
         </article>
 
         <article className="card example">
           <span className="section-label">Currency</span>
           <Numorph
+            {...numorphSlowMotionProps}
             value={gems}
             locales="en-US"
             format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
-            preset={preset}
             animate={animate}
           />
         </article>
@@ -372,11 +384,11 @@ function App() {
         <article className="card example">
           <span className="section-label">Compact</span>
           <Numorph
+            {...numorphSlowMotionProps}
             value={gems * 42}
             locales="en-US"
             format={{ notation: 'compact', maximumFractionDigits: 1 }}
             suffix=" views"
-            preset={preset}
             animate={animate}
           />
         </article>
@@ -384,10 +396,10 @@ function App() {
         <article className="card example">
           <span className="section-label">Percent</span>
           <Numorph
+            {...numorphSlowMotionProps}
             value={percent}
             locales="en-US"
             format={{ style: 'percent', maximumFractionDigits: 1 }}
-            preset={preset}
             animate={animate}
           />
         </article>
@@ -395,18 +407,18 @@ function App() {
         <article className="card example">
           <span className="section-label">Signed Decimal</span>
           <Numorph
+            {...numorphSlowMotionProps}
             value={temperature}
             locales="en-US"
             format={{ signDisplay: 'exceptZero', minimumFractionDigits: 1, maximumFractionDigits: 1 }}
             suffix=" deg"
-            preset={preset}
             animate={animate}
           />
         </article>
 
         <article className="card example">
           <span className="section-label">Level Prefix</span>
-          <Numorph value={Math.floor(score / 250) + 1} prefix="Level " preset={preset} animate={animate} />
+          <Numorph {...numorphSlowMotionProps} value={Math.floor(score / 250) + 1} prefix="Level " animate={animate} />
         </article>
 
         <article className="card example parts-example">
@@ -414,11 +426,11 @@ function App() {
             <span className="section-label">Animated Parts</span>
           </div>
           <Numorph
+            {...numorphSlowMotionProps}
             value={partDisplayValue}
             locales="en-US"
             format={partFormat}
             suffix={partSuffix}
-            preset={preset}
             animate={animate}
             animationKey={`${partMode}:${partValue}`}
           />
@@ -445,7 +457,7 @@ function App() {
             }}
             hasError={classCodeError}
             animate={animate}
-            preset={preset}
+            slowMotion={slowMotion}
           />
           <div className="otp-actions">
             <button
@@ -536,12 +548,13 @@ function App() {
           <section className="example-grid" aria-label="NumberFlow examples">
             <article className="card example example-large number-flow-example">
               <span className="section-label">Score</span>
-              <NumberFlow value={flowScore} locales="en-US" animated={animate} />
+              <NumberFlow {...numberFlowSlowMotionProps} value={flowScore} locales="en-US" animated={animate} />
             </article>
 
             <article className="card example number-flow-example">
               <span className="section-label">Currency</span>
               <NumberFlow
+                {...numberFlowSlowMotionProps}
                 value={flowGems}
                 locales="en-US"
                 format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
@@ -552,6 +565,7 @@ function App() {
             <article className="card example number-flow-example">
               <span className="section-label">Compact</span>
               <NumberFlow
+                {...numberFlowSlowMotionProps}
                 value={flowGems * 42}
                 locales="en-US"
                 format={{ notation: 'compact', maximumFractionDigits: 1 }}
@@ -563,6 +577,7 @@ function App() {
             <article className="card example number-flow-example">
               <span className="section-label">Percent</span>
               <NumberFlow
+                {...numberFlowSlowMotionProps}
                 value={flowPercent}
                 locales="en-US"
                 format={{ style: 'percent', maximumFractionDigits: 1 }}
@@ -573,6 +588,7 @@ function App() {
             <article className="card example number-flow-example">
               <span className="section-label">Signed Decimal</span>
               <NumberFlow
+                {...numberFlowSlowMotionProps}
                 value={flowTemperature}
                 locales="en-US"
                 format={{ signDisplay: 'exceptZero', minimumFractionDigits: 1, maximumFractionDigits: 1 }}
@@ -583,7 +599,7 @@ function App() {
 
             <article className="card example number-flow-example">
               <span className="section-label">Level Prefix</span>
-              <NumberFlow value={Math.floor(flowScore / 250) + 1} prefix="Level " animated={animate} />
+              <NumberFlow {...numberFlowSlowMotionProps} value={Math.floor(flowScore / 250) + 1} prefix="Level " animated={animate} />
             </article>
 
             <article className="card example parts-example number-flow-example">
@@ -591,6 +607,7 @@ function App() {
                 <span className="section-label">Animated Parts</span>
               </div>
               <NumberFlow
+                {...numberFlowSlowMotionProps}
                 value={flowPartDisplayValue}
                 locales="en-US"
                 format={flowPartFormat}
@@ -613,8 +630,18 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+async function renderPlayground() {
+  try {
+    await document.fonts.load('600 44px "Google Sans Flex Variable"', '0123456789,.$%+-');
+  } catch {
+    // The system fallback remains usable if the demo font cannot load.
+  }
+
+  createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
+
+void renderPlayground();

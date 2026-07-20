@@ -166,7 +166,6 @@ const displayValue = isFilled ? Number(digit) : 0;
 <div className="otp-slot">
   <Numorph
     value={displayValue}
-    preset="soft"
     trend={isFilled ? 'up' : 'down'}
     animationKey={`${isFilled ? 'filled' : 'empty'}:${displayValue}`}
     layoutCorrection={false}
@@ -193,24 +192,7 @@ Recommended slot CSS:
 
 ## Timing and Easing
 
-Use presets for most cases:
-
-```tsx
-<Numorph value={score} preset="soft" />
-<Numorph value={score} preset="snappy" />
-<Numorph value={score} preset="springy" />
-```
-
-Available presets:
-
-| Preset | Best For |
-| --- | --- |
-| `default` | Balanced app UI motion. |
-| `soft` | Calm product UI, slower dashboards, and gentle changes. |
-| `snappy` | Small counters, compact stats, and frequent updates. |
-| `springy` | A more visibly spring-based preset for testing and playful surfaces. |
-
-For more control, use the grouped timing props:
+Numorph uses one carefully tuned motion profile by default. For more control, use the grouped timing props:
 
 ```tsx
 <Numorph
@@ -250,6 +232,8 @@ Timing layers:
 | `layoutTiming` | Layout movement when stable parts shift position. |
 | `opacityTiming` | Fade and blur timing for entering/exiting faces and parts. |
 
+Changed digits are staggered from left to right.
+
 Each motion timing object accepts:
 
 ```ts
@@ -277,10 +261,12 @@ If `easing` is supplied, Numorph uses it directly. If `spring` is supplied and n
 
 `trend` controls the direction of digit movement.
 
+Numorph defaults to `up`, so digits travel in one consistent direction whether the value increases or decreases. Use `auto` when direction should follow the numeric change.
+
 | Value | Behavior |
 | --- | --- |
 | `auto` | Digits move up when the numeric value increases and down when it decreases. |
-| `up` | Digits always enter upward. Useful for adding code digits or celebratory counters. |
+| `up` | Digits always enter upward. This is the default. |
 | `down` | Digits always enter downward. Useful for deletions or countdown-like moments. |
 | `neutral` | Avoids directional digit animation unless a non-value animation key or formatted part change needs a transition. |
 
@@ -436,7 +422,6 @@ Numorph preserves active slot animations across unrelated parent renders. This m
 ```ts
 type NumorphValue = number | bigint;
 type NumorphTrend = 'auto' | 'up' | 'down' | 'neutral';
-type NumorphPreset = 'default' | 'soft' | 'snappy' | 'springy';
 ```
 
 | Prop | Type | Default | Notes |
@@ -446,19 +431,18 @@ type NumorphPreset = 'default' | 'soft' | 'snappy' | 'springy';
 | `format` | `Intl.NumberFormatOptions` | `undefined` | Passed to `Intl.NumberFormat`. |
 | `prefix` | `string` | `undefined` | Stable text before the formatted number. |
 | `suffix` | `string` | `undefined` | Stable text after the formatted number. |
-| `preset` | `NumorphPreset` | `default` | Motion preset. |
-| `trend` | `NumorphTrend` | `auto` | Direction of digit movement. |
-| `timing` | `NumorphTiming` | Preset timing | Shared timing override. |
+| `trend` | `NumorphTrend` | `up` | Direction of digit movement. Use `auto` to follow value changes. |
+| `timing` | `NumorphTiming` | Built-in timing | Shared timing override. |
 | `digitTiming` | `NumorphTiming` | `timing` | Overrides digit motion. |
 | `partTiming` | `NumorphTiming` | `timing` | Overrides non-digit part motion. |
 | `layoutTiming` | `NumorphTiming` | `timing` | Overrides layout correction motion. |
 | `opacityTiming` | `NumorphVisualTiming` | Derived from timing | Overrides opacity and blur timing. |
-| `duration` | `number` | Preset duration | Convenience shorthand for base duration. |
-| `stagger` | `number` | Preset stagger | Delay between digit animations. |
-| `easing` | `string` | Preset easing | Convenience shorthand for base easing. |
-| `blur` | `number | string` | Preset blur | Blur amount for entering/exiting content. |
-| `moveDistance` | `number | string` | Preset distance | Vertical movement distance. |
-| `spring` | `Partial<NumorphSpring>` | Preset spring | Convenience shorthand for base spring params. |
+| `duration` | `number` | Built-in duration | Convenience shorthand for base duration. |
+| `stagger` | `number` | Built-in stagger | Delay between digit animations. |
+| `easing` | `string` | Built-in easing | Convenience shorthand for base easing. |
+| `blur` | `number | string` | Built-in blur | Blur amount for entering/exiting content. |
+| `moveDistance` | `number | string` | Built-in distance | Vertical movement distance. |
+| `spring` | `Partial<NumorphSpring>` | Built-in spring | Convenience shorthand for base spring params. |
 | `layoutCorrection` | `boolean` | `true` | Animates stable parts when their position changes. |
 | `animationKey` | `React.Key` | `undefined` | Forces a visual transition when value alone is not enough. |
 | `animate` | `boolean` | `true` | Enables or disables animation. |
@@ -495,7 +479,6 @@ Numorph keeps active animations alive through unrelated re-renders. It does not 
 
 For very high-frequency values, consider:
 
-- Using `preset="snappy"`.
 - Lowering `duration` and `stagger`.
 - Disabling animation while dragging or scrubbing.
 - Animating only committed values instead of every transient value.

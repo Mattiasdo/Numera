@@ -7,12 +7,10 @@ import {
   NumericTextValue,
 } from './formatNumericText';
 import {
-  NUMERIC_TEXT_PRESETS,
-  NumericTextPreset,
+  DEFAULT_NUMERIC_TEXT_MOTION,
   NumericTextSpring,
   NumericTextTiming,
   NumericTextVisualTiming,
-  resolveMotionPreset,
 } from './motion';
 import { createSpringTiming } from './springTiming';
 
@@ -23,7 +21,6 @@ interface NumericTextControllerOptions {
   format?: Intl.NumberFormatOptions;
   prefix?: string;
   suffix?: string;
-  preset?: NumericTextPreset;
   trend?: NumericTextTrend;
   timing?: NumericTextTiming;
   digitTiming?: NumericTextTiming;
@@ -65,6 +62,14 @@ interface ActiveSlotAnimation {
   isNew: boolean;
   runId: string;
   expiresAt: number;
+}
+
+interface DigitPresentation {
+  char: string;
+  interrupted: boolean;
+  transform: string;
+  opacity: string;
+  filter: string;
 }
 
 const DEFAULT_SCALE = 0.8;
@@ -167,11 +172,11 @@ function createSlots(
 function createSlotDelays(slots: NumericTextSlot[], stagger: number) {
   const delayMap = new Map<string, number>();
   const animatedSlots = slots.filter((slot) => slot.shouldAnimate);
-  const digitSlots = animatedSlots.filter((slot) => slot.isDigit).reverse();
+  const digitSlots = animatedSlots.filter((slot) => slot.isDigit);
   const nonDigitSlots = animatedSlots.filter((slot) => !slot.isDigit);
 
   [...digitSlots, ...nonDigitSlots].forEach((slot, index) => {
-    delayMap.set(slot.id, slot.isDigit ? index * stagger : 0);
+    delayMap.set(slot.id, slot.isDigit ? (index + 1) * stagger : 0);
   });
 
   return delayMap;
@@ -240,8 +245,7 @@ class NumericTextController {
 
   constructor(options: NumericTextControllerOptions) {
     this.options = {
-      preset: 'default',
-      trend: 'auto',
+      trend: 'up',
       animate: true,
       respectReducedMotion: true,
       willChange: false,
@@ -285,6 +289,9 @@ class NumericTextController {
   private canAnimate() {
     return Boolean(
       this.options.animate &&
+      document.visibilityState === 'visible' &&
+      this.options.element.offsetWidth > 0 &&
+      this.options.element.offsetHeight > 0 &&
       !(this.options.respectReducedMotion && prefersReducedMotion())
     );
   }
@@ -298,14 +305,14 @@ class NumericTextController {
       prefix,
       suffix,
       animationKey,
-      trend = 'auto',
+      trend = 'up',
     } = this.options;
-    const motionPreset = resolveMotionPreset(this.options.preset);
+    const motion = DEFAULT_NUMERIC_TEXT_MOTION;
     const baseTiming = {
-      duration: this.options.timing?.duration ?? this.options.duration ?? motionPreset.duration,
-      easing: this.options.timing?.easing ?? this.options.easing ?? motionPreset.easing,
+      duration: this.options.timing?.duration ?? this.options.duration ?? motion.duration,
+      easing: this.options.timing?.easing ?? this.options.easing ?? motion.easing,
       spring: {
-        ...motionPreset.spring,
+        ...motion.spring,
         ...this.options.spring,
         ...this.options.timing?.spring,
       },
@@ -313,8 +320,8 @@ class NumericTextController {
     const digitTiming = resolveMotionTiming(baseTiming, this.options.digitTiming);
     const partTiming = resolveMotionTiming(baseTiming, this.options.partTiming);
     const opacityTiming = resolveVisualTiming(
-      Math.max(140, digitTiming.duration * 0.72),
-      'cubic-bezier(0.2, 0, 0, 1)',
+      Math.max(140, Math.min(260, digitTiming.duration * 0.72)),
+      'cubic-bezier(0.4, 0, 0.2, 1)',
       this.options.opacityTiming
     );
     const parts = formatNumericTextParts(value, locales, format, prefix, suffix);
@@ -329,10 +336,11 @@ class NumericTextController {
     const nonValueAnimation = animationKeyChanged || formattedPartsChanged;
     const motionDirection = direction === 'neutral' && nonValueAnimation ? 'up' : direction;
     const canAnimate = this.canAnimate() && this.hasMounted && (direction !== 'neutral' || nonValueAnimation);
+    if (!canAnimate) this.activeAnimations.clear();
     const runId = `${plainText}:${motionDirection}:${String(value)}:${String(animationKey ?? '')}`;
-    const distance = this.options.moveDistance ?? motionPreset.moveDistance;
-    const blur = this.options.blur ?? motionPreset.blur;
-    const resolvedStagger = this.options.stagger ?? motionPreset.stagger;
+    const distance = this.options.moveDistance ?? motion.moveDistance;
+    const blur = this.options.blur ?? motion.blur;
+    const resolvedStagger = this.options.stagger ?? motion.stagger;
     const shouldAnimateStableSlots = animationKeyChanged && !formattedPartsChanged;
     const now = Date.now();
     const activeAnimationLifetime =
@@ -399,12 +407,34 @@ class NumericTextController {
     element.style.setProperty('--numeric-part-visual-ease', opacityTiming.easing);
     element.style.setProperty('--numeric-text-blur', toCssLength(blur));
     element.style.setProperty('--numeric-text-mid-blur', toScaledCssLength(blur, 0.45));
-    element.style.setProperty('--numeric-text-soft-blur', toScaledCssLength(blur, 0.18));
+    element.style.setProperty('--numeric-text-subtle-blur', toScaledCssLength(blur, 0.18));
     element.style.setProperty('--numeric-text-scale', String(DEFAULT_SCALE));
     element.style.setProperty('--numeric-text-move-distance', toCssLength(distance, '%'));
     element.style.setProperty('--numeric-text-move-distance-negative', toNegativeCssLength(distance));
     element.style.setProperty('--numeric-text-move-distance-mid', toHalfCssLength(distance));
     element.style.setProperty('--numeric-text-move-distance-mid-negative', toNegativeCssLength(toHalfCssLength(distance)));
+
+    const presentations = new Map<string, DigitPresentation>();
+    element.querySelectorAll<HTMLElement>(':scope > .numeric-text__digit').forEach((digit) => {
+      if (!digit.dataset.slotId) return;
+      const faces = [...digit.querySelectorAll<HTMLElement>('.numeric-text__face')];
+      const face = faces.reduce<HTMLElement | null>((dominant, candidate) => (
+        !dominant || Number.parseFloat(getComputedStyle(candidate).opacity) >
+          Number.parseFloat(getComputedStyle(dominant).opacity)
+          ? candidate
+          : dominant
+      ), null);
+      if (!face) return;
+      const computed = getComputedStyle(face);
+      const interrupted = faces.some((candidate) => candidate.getAnimations().length > 0);
+      presentations.set(digit.dataset.slotId, {
+        char: face.textContent ?? '',
+        interrupted,
+        transform: computed.transform,
+        opacity: interrupted ? '1' : computed.opacity,
+        filter: computed.filter,
+      });
+    });
 
     element.replaceChildren();
 
@@ -456,6 +486,7 @@ class NumericTextController {
 
       const digit = document.createElement('span');
       digit.className = 'numeric-text__digit';
+      digit.dataset.slotId = slot.id;
       digit.dataset.direction = motionDirection;
       if (slot.shouldAnimate) digit.dataset.animate = 'true';
       if (slot.isNew) digit.dataset.new = 'true';
@@ -463,6 +494,7 @@ class NumericTextController {
 
       Object.entries({
         ...slotStyle,
+        '--numeric-digit-delay': presentations.get(slot.id)?.interrupted ? '0ms' : `${delay}ms`,
         '--numeric-digit-duration': `${digitTiming.duration}ms`,
         '--numeric-digit-visual-duration': `${opacityTiming.duration}ms`,
         '--numeric-digit-motion-ease': digitMotionEasing,
@@ -481,11 +513,22 @@ class NumericTextController {
       });
 
       if (slot.shouldAnimate) {
+        const presentation = presentations.get(slot.id);
         appendFace(
           digit,
-          slot.previousChar ?? EMPTY_FACE,
+          presentation?.char ?? slot.previousChar ?? EMPTY_FACE,
           'numeric-text__face numeric-text__face--previous numeric-text__face--exit',
-          {}
+          presentation ? {
+            '--numeric-digit-exit-start-transform': presentation.transform,
+            '--numeric-digit-exit-start-opacity': presentation.opacity,
+            '--numeric-digit-exit-start-filter': presentation.filter,
+            '--numeric-digit-visual-duration': `${Math.max(
+              1,
+              Number.parseFloat(presentation.opacity) * opacityTiming.duration
+            )}ms`,
+            '--numeric-digit-exit-motion-ease': 'linear',
+            '--numeric-digit-visual-ease': 'linear',
+          } : {}
         );
         appendFace(
           digit,
@@ -554,15 +597,12 @@ class NumericTextController {
 }
 
 const NumorphController = NumericTextController;
-const NUMORPH_PRESETS = NUMERIC_TEXT_PRESETS;
 
 export type NumorphControllerOptions = NumericTextControllerOptions;
 export type NumorphControllerUpdate = NumericTextControllerUpdate;
 
 export {
   NumorphController,
-  NUMORPH_PRESETS,
-  type NumericTextPreset as NumorphPreset,
   type NumericTextSpring as NumorphSpring,
   type NumericTextTiming as NumorphTiming,
   type NumericTextTrend as NumorphTrend,

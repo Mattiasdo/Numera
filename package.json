@@ -1,6 +1,6 @@
 {
   "name": "numorph",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Animated number text for React with rolling digits and formatted parts.",
   "type": "module",
   "license": "MIT",
@@ -56,13 +56,14 @@
   },
   "scripts": {
     "build": "tsup",
-    "check": "npm run typecheck && npm test && npm run build",
+    "check": "npm run typecheck && npm test && npm run test:browser && npm run build",
     "dev": "vite --host 127.0.0.1",
     "pack:dry": "npm pack --dry-run",
     "prepublishOnly": "npm run check",
     "security": "npm audit --audit-level=moderate && npm audit signatures && npm run pack:dry",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:browser": "playwright test",
     "prepack": "npm run build"
   },
   "peerDependencies": {
@@ -76,8 +77,10 @@
   "devDependencies": {
     "@fontsource-variable/google-sans-flex": "^5.2.3",
     "@number-flow/react": "^0.6.1",
+    "@playwright/test": "^1.61.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",

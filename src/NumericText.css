@@ -4,7 +4,7 @@
   --numeric-text-ease: cubic-bezier(0.2, 0, 0, 1);
   --numeric-text-blur: 4.25px;
   --numeric-text-mid-blur: 1.9125px;
-  --numeric-text-soft-blur: 0.765px;
+  --numeric-text-subtle-blur: 0.765px;
   --numeric-text-scale: 0.8;
   --numeric-text-move-distance: 0.42em;
   --numeric-text-move-distance-negative: -0.42em;
@@ -137,7 +137,7 @@
 
 .numeric-text__face--exit {
   animation:
-    numeric-text-face-exit-transform var(--numeric-digit-duration) var(--numeric-digit-exit-motion-ease) both,
+    numeric-text-face-exit-transform var(--numeric-digit-visual-duration) var(--numeric-digit-exit-motion-ease) both,
     numeric-text-face-exit-visual var(--numeric-digit-visual-duration) var(--numeric-digit-visual-ease) both;
   animation-delay: var(--numeric-digit-delay), var(--numeric-digit-delay);
 }
@@ -160,7 +160,7 @@
 }
 
 .numeric-text__exit {
-  position: fixed;
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,7 +177,7 @@
 
 .numeric-text__exit--animate {
   animation:
-    numeric-text-face-exit-transform var(--numeric-digit-duration) var(--numeric-digit-exit-motion-ease) both,
+    numeric-text-face-exit-transform var(--numeric-digit-visual-duration) var(--numeric-digit-exit-motion-ease) both,
     numeric-text-face-exit-visual var(--numeric-digit-visual-duration) var(--numeric-digit-visual-ease) both;
   animation-delay: var(--numeric-digit-delay), var(--numeric-digit-delay);
 }
@@ -206,7 +206,7 @@
 
 @keyframes numeric-text-face-exit-transform {
   0% {
-    transform: translate3d(0, var(--numeric-digit-rest-y), 0) scale(1);
+    transform: var(--numeric-digit-exit-start-transform, translate3d(0, var(--numeric-digit-rest-y), 0) scale(1));
   }
 
   100% {
@@ -216,8 +216,8 @@
 
 @keyframes numeric-text-face-exit-visual {
   0% {
-    opacity: 1;
-    filter: blur(0);
+    opacity: var(--numeric-digit-exit-start-opacity, 1);
+    filter: var(--numeric-digit-exit-start-filter, blur(0));
   }
 
   100% {
@@ -251,7 +251,7 @@
 @keyframes numeric-text-part-swap-in {
   0% {
     opacity: 0;
-    filter: blur(var(--numeric-text-soft-blur));
+    filter: blur(var(--numeric-text-subtle-blur));
   }
 
   100% {
@@ -268,7 +268,7 @@
 
   100% {
     opacity: 0;
-    filter: blur(var(--numeric-text-soft-blur));
+    filter: blur(var(--numeric-text-subtle-blur));
   }
 }
 

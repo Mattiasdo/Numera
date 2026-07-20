@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createSpringTiming } from './springTiming';
 
 export type AnimatedDigitDirection = 'up' | 'down' | 'neutral';
@@ -15,6 +15,7 @@ export interface AnimatedDigitProps extends Omit<React.HTMLAttributes<HTMLSpanEl
   animationKey?: React.Key;
   previousAnimationKey?: React.Key;
   shouldAnimate?: boolean;
+  enabled?: boolean;
   direction?: AnimatedDigitDirection;
   duration?: number;
   easing?: string;
@@ -46,6 +47,9 @@ const DEFAULT_SPRING: AnimatedDigitSpring = {
   damping: 42,
   mass: 0.82,
 };
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 function toCssLength(value: number | string, unit = 'px') {
   return typeof value === 'number' ? `${value}${unit}` : value;
 }
@@ -82,6 +86,14 @@ interface ActiveDigitAnimation {
   direction: AnimatedDigitDirection;
 }
 
+interface DigitPresentation {
+  char: string;
+  interrupted: boolean;
+  transform: string;
+  opacity: string;
+  filter: string;
+}
+
 export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProps>(
   (
     {
@@ -90,6 +102,7 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
       animationKey,
       previousAnimationKey,
       shouldAnimate = true,
+      enabled = true,
       direction = 'up',
       duration = DEFAULT_DURATION,
       easing,
@@ -118,6 +131,14 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
     const previousValueRef = useRef(value);
     const previousAnimationKeyRef = useRef<React.Key | undefined>(animationKey);
     const hasMountedRef = useRef(false);
+    const acceptedAnimationIdRef = useRef<string | null>(null);
+    const completedAnimationNamesRef = useRef(new Set<string>());
+    const currentFaceRef = useRef<HTMLSpanElement | null>(null);
+    const previousFaceRef = useRef<HTMLSpanElement | null>(null);
+    const presentationRef = useRef<DigitPresentation | null>(null);
+    const shouldCaptureOnDetachRef = useRef(false);
+    const hasActiveVisualTransitionRef = useRef(false);
+    const [activeAnimation, setActiveAnimation] = useState<ActiveDigitAnimation | null>(null);
     const hasExplicitPreviousValue = previousValue !== undefined;
     const hasExplicitPreviousAnimationKey = previousAnimationKey !== undefined;
     const resolvedPreviousValue = previousValue ?? previousValueRef.current;
@@ -148,7 +169,23 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
         direction,
       }
       : null;
-    const renderedAnimation = pendingAnimation;
+    const hasPendingAnimation = Boolean(
+      pendingAnimation && pendingAnimation.id !== acceptedAnimationIdRef.current
+    );
+    const activeAnimationMatches = Boolean(
+      enabled &&
+      activeAnimation &&
+      activeAnimation.value === value
+    );
+    const renderedAnimation = hasPendingAnimation
+      ? pendingAnimation
+      : activeAnimationMatches
+        ? activeAnimation
+        : null;
+    const isRetargeting = Boolean(
+      hasPendingAnimation && hasActiveVisualTransitionRef.current
+    );
+    shouldCaptureOnDetachRef.current = isRetargeting;
     const isAnimating = Boolean(renderedAnimation);
     const renderDirection = renderedAnimation?.direction ?? direction;
     const distanceCss = toCssLength(moveDistance, '%');
@@ -159,8 +196,8 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
     const blurCss = toCssLength(blur);
     const resolvedEnterMotionEasing = easing ?? springTiming.easing;
     const resolvedExitMotionEasing = exitEasing ?? DEFAULT_EXIT_EASING;
-    const resolvedVisualDuration = visualDuration ?? Math.max(140, motionDuration * 0.72);
-    const resolvedVisualEasing = visualEasing ?? 'cubic-bezier(0.2, 0, 0, 1)';
+    const resolvedVisualDuration = visualDuration ?? Math.max(140, Math.min(260, motionDuration * 0.72));
+    const resolvedVisualEasing = visualEasing ?? 'cubic-bezier(0.4, 0, 0.2, 1)';
     const enterFromY = renderDirection === 'up' ? distanceCss : negativeDistanceCss;
     const exitToY = renderDirection === 'up' ? negativeExitDistanceCss : exitDistanceCss;
     const rootStyle: React.CSSProperties = {
@@ -203,16 +240,119 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
       '--numeric-digit-scale': scale,
     } as React.CSSProperties;
 
+    const capturePresentation = useCallback(() => {
+      const faces = [previousFaceRef.current, currentFaceRef.current].filter(
+        (face): face is HTMLSpanElement => Boolean(face)
+      );
+      if (faces.length === 0) return;
+
+      const dominant = faces.reduce((current, candidate) => (
+        Number.parseFloat(getComputedStyle(candidate).opacity) >
+          Number.parseFloat(getComputedStyle(current).opacity)
+          ? candidate
+          : current
+      ));
+      const computed = getComputedStyle(dominant);
+      const interrupted = faces.some((face) => face.getAnimations().length > 0);
+      presentationRef.current = {
+        char: dominant.textContent ?? '',
+        interrupted,
+        transform: computed.transform,
+        opacity: interrupted ? '1' : computed.opacity,
+        filter: computed.filter,
+      };
+    }, []);
+
+    const setPreviousFaceRef = useCallback((node: HTMLSpanElement | null) => {
+      if (!node && shouldCaptureOnDetachRef.current && !presentationRef.current) {
+        capturePresentation();
+      }
+      previousFaceRef.current = node;
+    }, [capturePresentation]);
+
+    const setCurrentFaceRef = useCallback((node: HTMLSpanElement | null) => {
+      if (!node && shouldCaptureOnDetachRef.current && !presentationRef.current) {
+        capturePresentation();
+      }
+      currentFaceRef.current = node;
+    }, [capturePresentation]);
+
     useEffect(() => {
       previousValueRef.current = value;
       previousAnimationKeyRef.current = animationKey;
       hasMountedRef.current = true;
     }, [value, animationKey]);
 
+    useIsomorphicLayoutEffect(() => {
+      if (!hasPendingAnimation || !pendingAnimation) return;
+
+      acceptedAnimationIdRef.current = pendingAnimation.id;
+      completedAnimationNamesRef.current.clear();
+      setActiveAnimation(pendingAnimation);
+    }, [hasPendingAnimation, pendingAnimation?.id]);
+
+    useIsomorphicLayoutEffect(() => {
+      const presentation = presentationRef.current;
+      if (!isRetargeting) {
+        presentationRef.current = null;
+        return;
+      }
+      if (!presentation?.interrupted) return;
+      if (presentation.char === pendingAnimation?.value) {
+        presentationRef.current = null;
+        return;
+      }
+
+      const previousFace = previousFaceRef.current;
+      const currentFace = currentFaceRef.current;
+      if (!previousFace || !currentFace) return;
+
+      previousFace.textContent = presentation.char;
+      previousFace.style.setProperty('--numeric-digit-exit-start-transform', presentation.transform);
+      previousFace.style.setProperty('--numeric-digit-exit-start-opacity', presentation.opacity);
+      previousFace.style.setProperty('--numeric-digit-exit-start-filter', presentation.filter);
+      previousFace.style.setProperty('--numeric-digit-visual-duration', `${resolvedVisualDuration}ms`);
+      previousFace.style.setProperty('--numeric-digit-exit-motion-ease', 'linear');
+      previousFace.style.setProperty('--numeric-digit-visual-ease', 'linear');
+      previousFace.style.setProperty('--numeric-digit-delay', '0ms');
+      currentFace.style.setProperty('--numeric-digit-delay', '0ms');
+      presentationRef.current = null;
+    }, [isRetargeting, pendingAnimation?.id, resolvedVisualDuration]);
+
+    useEffect(() => {
+      if (!enabled) {
+        hasActiveVisualTransitionRef.current = false;
+        setActiveAnimation(null);
+      }
+    }, [enabled]);
+
+    const handleAnimationEnd = (event: React.AnimationEvent<HTMLSpanElement>) => {
+      if (event.target !== event.currentTarget || !renderedAnimation) {
+        return;
+      }
+
+      const completedNames = completedAnimationNamesRef.current;
+      if (
+        event.animationName !== 'numeric-text-face-enter-transform' &&
+        event.animationName !== 'numeric-text-face-enter-visual'
+      ) return;
+
+      completedNames.add(event.animationName);
+      if (event.animationName === 'numeric-text-face-enter-visual') {
+        hasActiveVisualTransitionRef.current = false;
+      }
+      if (completedNames.size < 2) return;
+
+      const completedId = renderedAnimation.id;
+      hasActiveVisualTransitionRef.current = false;
+      setActiveAnimation((current) => current?.id === completedId ? null : current);
+    };
+
     return (
       <span {...props} ref={ref} className={className} style={rootStyle}>
         {isAnimating && renderedAnimation && (
           <span
+            ref={setPreviousFaceRef}
             key={`previous:${renderedAnimation.id}`}
             className={joinClassNames(faceClassName, previousClassName, 'numeric-text__face--exit')}
             style={{
@@ -227,8 +367,15 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
         )}
         {isAnimating && renderedAnimation ? (
           <span
+            ref={setCurrentFaceRef}
             key={`current:${renderedAnimation.id}`}
             className={joinClassNames(faceClassName, currentClassName, 'numeric-text__face--enter')}
+            onAnimationStart={(event) => {
+              if (event.animationName === 'numeric-text-face-enter-visual') {
+                hasActiveVisualTransitionRef.current = true;
+              }
+            }}
+            onAnimationEnd={handleAnimationEnd}
             style={{
               ...sharedFaceStyle,
               ...animationVars,
@@ -240,6 +387,7 @@ export const AnimatedDigit = React.forwardRef<HTMLSpanElement, AnimatedDigitProp
           </span>
         ) : (
           <span
+            ref={setCurrentFaceRef}
             key={`current:${String(animationKey ?? '')}:${value}`}
             className={joinClassNames(faceClassName, currentClassName)}
             style={{

@@ -20,5 +20,7 @@ pnpm-debug.log*
 .cache
 .parcel-cache
 coverage
+playwright-report
+test-results
 *.lcov
 *.tsbuildinfo

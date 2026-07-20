@@ -1,6 +1,8 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import './NumericText.css';
 import { AnimatedDigit } from './AnimatedDigit';
+import { AnimatedExit } from './AnimatedExit';
+import { AnimatedPart } from './AnimatedPart';
 import {
   compareNumericTextValues,
   formatNumericTextParts,
@@ -10,9 +12,7 @@ import {
   NumericTextValue,
 } from './formatNumericText';
 import {
-  NUMERIC_TEXT_PRESETS,
-  NumericTextMotionPreset,
-  NumericTextPreset,
+  DEFAULT_NUMERIC_TEXT_MOTION,
   NumericTextSpring,
   NumericTextTiming,
   NumericTextVisualTiming,
@@ -31,7 +31,6 @@ export interface NumericTextProps extends NumericTextElementProps {
   format?: Intl.NumberFormatOptions;
   prefix?: string;
   suffix?: string;
-  preset?: NumericTextPreset;
   trend?: NumericTextTrend;
   timing?: NumericTextTiming;
   digitTiming?: NumericTextTiming;
@@ -65,19 +64,9 @@ interface NumericTextSlot {
   runId: string;
 }
 
-interface ActiveSlotAnimation {
-  previousChar?: string;
-  currentChar: string;
-  isNew: boolean;
-  runId: string;
-  expiresAt: number;
-}
-
 interface NumericTextRect {
   left: number;
   top: number;
-  viewportLeft: number;
-  viewportTop: number;
   width: number;
   height: number;
 }
@@ -96,7 +85,6 @@ const DEFAULT_BLUR = 4.25;
 const DEFAULT_SCALE = 0.8;
 const DEFAULT_MOVE_DISTANCE = '0.42em';
 const EMPTY_FACE = '\u00A0';
-const STALE_LAYOUT_SNAPSHOT_MS = 60_000;
 const useIsomorphicLayoutEffect =
   typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
@@ -196,23 +184,16 @@ function partsChanged(previousParts: NumericTextChar[], nextParts: NumericTextCh
   });
 }
 
-function measureChildren(
-  root: HTMLElement,
-  nodes: Map<string, HTMLElement | null>
-): Map<string, NumericTextRect> {
-  const rootRect = root.getBoundingClientRect();
+function measureChildren(nodes: Map<string, HTMLElement | null>): Map<string, NumericTextRect> {
   const measures = new Map<string, NumericTextRect>();
 
   nodes.forEach((node, id) => {
     if (!node) return;
-    const rect = node.getBoundingClientRect();
     measures.set(id, {
-      left: rect.left - rootRect.left,
-      top: rect.top - rootRect.top,
-      viewportLeft: rect.left,
-      viewportTop: rect.top,
-      width: rect.width,
-      height: rect.height,
+      left: node.offsetLeft,
+      top: node.offsetTop,
+      width: node.offsetWidth,
+      height: node.offsetHeight,
     });
   });
 
@@ -257,11 +238,11 @@ function animateLayoutCorrection(
 function createSlotDelays(slots: NumericTextSlot[], stagger: number) {
   const delayMap = new Map<string, number>();
   const animatedSlots = slots.filter((slot) => slot.shouldAnimate);
-  const digitSlots = animatedSlots.filter((slot) => slot.isDigit).reverse();
+  const digitSlots = animatedSlots.filter((slot) => slot.isDigit);
   const nonDigitSlots = animatedSlots.filter((slot) => !slot.isDigit);
 
   [...digitSlots, ...nonDigitSlots].forEach((slot, index) => {
-    delayMap.set(slot.id, slot.isDigit ? index * stagger : 0);
+    delayMap.set(slot.id, slot.isDigit ? (index + 1) * stagger : 0);
   });
 
   return delayMap;
@@ -304,8 +285,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
       format,
       prefix,
       suffix,
-      preset = 'default',
-      trend = 'auto',
+      trend = 'up',
       timing,
       digitTiming,
       partTiming,
@@ -339,15 +319,15 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
     const previousAnimationKeyRef = useRef<React.Key | undefined>(animationKey);
     const previousPartsRef = useRef<NumericTextChar[] | null>(null);
     const previousRectsRef = useRef(new Map<string, NumericTextRect>());
-    const lastLayoutCommitRef = useRef(Date.now());
-    const activeSlotAnimationsRef = useRef(new Map<string, ActiveSlotAnimation>());
+    const animationFinishTimerRef = useRef<number | undefined>(undefined);
+    const activeAnimationBatchRef = useRef<string | null>(null);
     const hasMountedRef = useRef(false);
-    const motionPreset = NUMERIC_TEXT_PRESETS[preset] ?? NUMERIC_TEXT_PRESETS.default;
+    const motion = DEFAULT_NUMERIC_TEXT_MOTION;
     const baseTiming = {
-      duration: timing?.duration ?? duration ?? motionPreset.duration,
-      easing: timing?.easing ?? easing ?? motionPreset.easing,
+      duration: timing?.duration ?? duration ?? motion.duration,
+      easing: timing?.easing ?? easing ?? motion.easing,
       spring: {
-        ...motionPreset.spring,
+        ...motion.spring,
         ...spring,
         ...timing?.spring,
       },
@@ -356,15 +336,15 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
     const resolvedPartTiming = resolveMotionTiming(baseTiming, partTiming);
     const resolvedLayoutTiming = resolveMotionTiming(baseTiming, layoutTiming);
     const resolvedOpacityTiming = resolveVisualTiming(
-      Math.max(140, resolvedDigitTiming.duration * 0.72),
-      'cubic-bezier(0.2, 0, 0, 1)',
+      Math.max(140, Math.min(260, resolvedDigitTiming.duration * 0.72)),
+      'cubic-bezier(0.4, 0, 0.2, 1)',
       opacityTiming
     );
-    const resolvedStagger = stagger ?? motionPreset.stagger;
+    const resolvedStagger = stagger ?? motion.stagger;
     const resolvedEasing = baseTiming.easing;
-    const resolvedBlur = blur ?? motionPreset.blur;
+    const resolvedBlur = blur ?? motion.blur;
     const resolvedScale = DEFAULT_SCALE;
-    const resolvedMoveDistance = moveDistance ?? motionPreset.moveDistance;
+    const resolvedMoveDistance = moveDistance ?? motion.moveDistance;
 
     const parts = useMemo(
       () => formatNumericTextParts(value, locales, format, prefix, suffix),
@@ -387,47 +367,13 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
     const animationRunId = `${plainText}:${motionDirection}:${String(value)}:${String(animationKey ?? '')}`;
     const distance = resolvedMoveDistance;
     const shouldAnimateStableSlots = animationKeyChanged && !formattedPartsChanged;
-    const now = Date.now();
-    const hasStaleLayoutSnapshot =
-      hasMountedRef.current && now - lastLayoutCommitRef.current > STALE_LAYOUT_SNAPSHOT_MS;
-    if (hasStaleLayoutSnapshot) {
-      activeSlotAnimationsRef.current.clear();
-    }
-    const activeAnimationLifetime =
-      Math.max(resolvedDigitTiming.duration, resolvedPartTiming.duration) +
-      Math.max(0, parts.length - 1) * resolvedStagger +
-      500;
-    const slots = createSlots(previousParts, parts, canAnimate, animationRunId, shouldAnimateStableSlots).map((slot) => {
-      if (slot.shouldAnimate) {
-        activeSlotAnimationsRef.current.set(slot.id, {
-          previousChar: slot.previousChar,
-          currentChar: slot.currentChar,
-          isNew: slot.isNew,
-          runId: slot.runId,
-          expiresAt: now + activeAnimationLifetime,
-        });
-
-        return slot;
-      }
-
-      const activeAnimation = activeSlotAnimationsRef.current.get(slot.id);
-      if (activeAnimation && activeAnimation.expiresAt <= now) {
-        activeSlotAnimationsRef.current.delete(slot.id);
-        return slot;
-      }
-
-      if (!allowsMotion || !activeAnimation || activeAnimation.currentChar !== slot.currentChar) {
-        return slot;
-      }
-
-      return {
-        ...slot,
-        previousChar: activeAnimation.previousChar,
-        shouldAnimate: true,
-        isNew: activeAnimation.isNew,
-        runId: activeAnimation.runId,
-      };
-    });
+    const slots = createSlots(
+      previousParts,
+      parts,
+      canAnimate,
+      animationRunId,
+      shouldAnimateStableSlots
+    );
     const slotDelays = createSlotDelays(slots, resolvedStagger);
     const animatedCount = slots.filter((slot) => slot.shouldAnimate).length;
     const nextIds = new Set(parts.map((part) => part.id));
@@ -459,13 +405,16 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
     const layoutMotionEasing = shouldUseLayoutSpring
       ? layoutSpringTiming.easing
       : resolvedLayoutTiming.easing;
+    let exitingDigitIndex = 0;
     const exitingSlots: NumericTextExitSlot[] = canAnimate
       ? previousParts
         .filter((part) => !nextIds.has(part.id))
-        .reverse()
-        .map((part, index) => {
-          const rect = hasStaleLayoutSnapshot ? undefined : previousRectsRef.current.get(part.id);
+        .map((part) => {
+          const rect = previousRectsRef.current.get(part.id);
           if (!rect) return null;
+
+          const delay = part.isDigit ? exitingDigitIndex * resolvedStagger : 0;
+          if (part.isDigit) exitingDigitIndex += 1;
 
           return {
             id: `exit:${part.id}:${animationRunId}`,
@@ -473,7 +422,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
             kind: part.kind,
             isDigit: part.isDigit,
             rect,
-            delay: part.isDigit ? index * resolvedStagger : 0,
+            delay,
           };
         })
         .filter((slot): slot is NumericTextExitSlot => Boolean(slot))
@@ -488,12 +437,11 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
         previousPartsRef.current = parts;
         previousValueRef.current = value;
         previousAnimationKeyRef.current = animationKey;
-        lastLayoutCommitRef.current = Date.now();
         hasMountedRef.current = true;
         return;
       }
 
-      const currentRects = measureChildren(root, nodeRefs.current);
+      const currentRects = measureChildren(nodeRefs.current);
       const currentPartsById = new Map(parts.map((part) => [part.id, part]));
 
       if (canAnimate) {
@@ -517,7 +465,6 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
       previousPartsRef.current = parts;
       previousValueRef.current = value;
       previousAnimationKeyRef.current = animationKey;
-      lastLayoutCommitRef.current = Date.now();
       hasMountedRef.current = true;
     }, [
       animationKey,
@@ -530,55 +477,72 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
       value,
     ]);
 
-    useEffect(() => {
-      const shouldNotify = canAnimate && (animatedCount > 0 || exitingSlots.length > 0);
-      let finishTimer: number | undefined;
-      const clearTimers: number[] = [];
+    useIsomorphicLayoutEffect(() => {
+      const root = rootRef.current;
+      if (!root || !layoutCorrection || typeof ResizeObserver === 'undefined') return;
 
-      slots.forEach((slot) => {
-        if (!slot.shouldAnimate) return;
-
-        const clearDelay =
-          (slotDelays.get(slot.id) ?? 0) +
-          (slot.isDigit ? resolvedDigitTiming.duration : resolvedPartTiming.duration) +
-          140;
-
-        clearTimers.push(window.setTimeout(() => {
-          const activeAnimation = activeSlotAnimationsRef.current.get(slot.id);
-          if (activeAnimation?.runId === slot.runId) {
-            activeSlotAnimationsRef.current.delete(slot.id);
-          }
-        }, clearDelay));
-      });
-
-      if (shouldNotify) {
-        onAnimationsStart?.();
-        const totalAnimated = Math.max(animatedCount, exitingSlots.length);
-        const totalDuration =
-          Math.max(resolvedDigitTiming.duration, resolvedPartTiming.duration) +
-          Math.max(0, totalAnimated - 1) * resolvedStagger;
-        finishTimer = window.setTimeout(() => {
-          onAnimationsFinish?.();
-        }, totalDuration);
-      }
+      let frame: number | undefined;
+      const refreshLayoutSnapshot = () => {
+        if (frame !== undefined) window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(() => {
+          previousRectsRef.current = measureChildren(nodeRefs.current);
+          frame = undefined;
+        });
+      };
+      const observer = new ResizeObserver(refreshLayoutSnapshot);
+      observer.observe(root);
 
       return () => {
-        if (finishTimer) window.clearTimeout(finishTimer);
-        clearTimers.forEach((timer) => window.clearTimeout(timer));
+        observer.disconnect();
+        if (frame !== undefined) window.cancelAnimationFrame(frame);
       };
+    }, [layoutCorrection]);
+
+    useEffect(() => {
+      const shouldNotify = canAnimate && (animatedCount > 0 || exitingSlots.length > 0);
+      if (!shouldNotify || activeAnimationBatchRef.current === animationRunId) return;
+
+      if (animationFinishTimerRef.current !== undefined) {
+        window.clearTimeout(animationFinishTimerRef.current);
+      }
+
+      activeAnimationBatchRef.current = animationRunId;
+      onAnimationsStart?.();
+      const totalAnimated = Math.max(animatedCount, exitingSlots.length);
+      const totalDuration =
+        Math.max(
+          resolvedDigitTiming.duration,
+          resolvedPartTiming.duration,
+          resolvedLayoutTiming.duration,
+          resolvedOpacityTiming.duration
+        ) +
+        Math.max(0, totalAnimated - 1) * resolvedStagger;
+      animationFinishTimerRef.current = window.setTimeout(() => {
+        if (activeAnimationBatchRef.current !== animationRunId) return;
+
+        activeAnimationBatchRef.current = null;
+        animationFinishTimerRef.current = undefined;
+        onAnimationsFinish?.();
+      }, totalDuration);
     }, [
       animatedCount,
       animationRunId,
       canAnimate,
       resolvedDigitTiming.duration,
+      resolvedLayoutTiming.duration,
+      resolvedOpacityTiming.duration,
       resolvedPartTiming.duration,
       onAnimationsFinish,
       onAnimationsStart,
       exitingSlots.length,
-      slotDelays,
-      slots,
       resolvedStagger,
     ]);
+
+    useEffect(() => () => {
+      if (animationFinishTimerRef.current !== undefined) {
+        window.clearTimeout(animationFinishTimerRef.current);
+      }
+    }, []);
 
     const setRootRef = (node: HTMLSpanElement | null) => {
       rootRef.current = node;
@@ -608,7 +572,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
             '--numeric-part-visual-ease': resolvedOpacityTiming.easing,
             '--numeric-text-blur': toCssLength(resolvedBlur),
             '--numeric-text-mid-blur': toScaledCssLength(resolvedBlur, 0.45),
-            '--numeric-text-soft-blur': toScaledCssLength(resolvedBlur, 0.18),
+            '--numeric-text-subtle-blur': toScaledCssLength(resolvedBlur, 0.18),
             '--numeric-text-scale': resolvedScale,
             '--numeric-text-move-distance': toCssLength(distance, '%'),
             '--numeric-text-move-distance-negative': toNegativeCssLength(distance),
@@ -644,33 +608,26 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
           } as React.CSSProperties;
 
           if (!isDigit) {
-            const shouldSwapPart = shouldAnimate && !isNew && previousChar !== undefined && previousChar !== currentChar;
-
             return (
-              <span
+              <AnimatedPart
                 key={id}
                 ref={(node) => {
                   nodeRefs.current.set(id, node);
                 }}
                 className="numeric-text__part"
-                data-kind={kind}
-                data-animate={shouldAnimate ? 'true' : undefined}
-                data-motion={shouldAnimate ? (shouldSwapPart ? 'swap' : 'enter') : undefined}
+                currentChar={currentChar}
+                previousChar={previousChar}
+                kind={kind}
+                runId={runId}
+                shouldAnimate={shouldAnimate}
+                isNew={isNew}
+                enabled={allowsMotion}
                 style={slotStyle}
-              >
-                {shouldSwapPart && (
-                  <span className="numeric-text__part-value numeric-text__part-value--previous">
-                    {previousChar}
-                  </span>
-                )}
-                <span className="numeric-text__part-value numeric-text__part-value--current">
-                  {currentChar}
-                </span>
-              </span>
+              />
             );
           }
 
-          const oldChar = previousChar ?? EMPTY_FACE;
+          const previousValue = previousChar ?? EMPTY_FACE;
           return (
             <AnimatedDigit
               key={id}
@@ -678,8 +635,9 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
                 nodeRefs.current.set(id, node);
               }}
               value={currentChar}
-              previousValue={oldChar}
+              previousValue={previousValue}
               shouldAnimate={shouldAnimate}
+              enabled={allowsMotion}
               direction={motionDirection}
               duration={resolvedDigitTiming.duration}
               easing={digitMotionEasing}
@@ -709,7 +667,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
         })}
 
         {exitingSlots.map((slot) => (
-          <span
+          <AnimatedExit
             key={slot.id}
             aria-hidden="true"
             className="numeric-text__exit numeric-text__exit--animate"
@@ -718,8 +676,8 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
             data-digit={slot.isDigit ? 'true' : undefined}
             style={
               {
-                left: `${slot.rect.viewportLeft}px`,
-                top: `${slot.rect.viewportTop}px`,
+                left: `${slot.rect.left}px`,
+                top: `${slot.rect.top}px`,
                 width: `${slot.rect.width}px`,
                 height: `${slot.rect.height}px`,
                 '--numeric-text-delay': `${slot.delay}ms`,
@@ -744,7 +702,7 @@ export const NumericText = React.forwardRef<HTMLSpanElement, NumericTextProps>(
             }
           >
             {slot.char}
-          </span>
+          </AnimatedExit>
         ))}
       </span>
     );

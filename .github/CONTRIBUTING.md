@@ -8,6 +8,7 @@ Thanks for helping improve Numorph.
 npm install
 npm run typecheck
 npm test
+npm run test:browser
 npm run build
 ```
 

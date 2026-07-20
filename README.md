@@ -49,15 +49,7 @@ Numorph animates formatted number parts as first-class pieces. Digits roll, sepa
 
 ## Spring Animations
 
-Use presets for quick tuning:
-
-```tsx
-<Numorph value={score} preset="soft" />;
-<Numorph value={score} preset="snappy" />;
-<Numorph value={score} preset="springy" />;
-```
-
-Or pass timing options directly. Springs are generated as CSS timing functions, so there is no runtime animation dependency.
+Numorph ships with one carefully tuned motion profile. Pass timing options directly when a product needs different behavior. Springs are generated as CSS timing functions, so there is no runtime animation dependency.
 
 ```tsx
 <Numorph
@@ -80,7 +72,6 @@ const displayDigit = isFilled ? Number(digit) : 0;
 
 <Numorph
   value={displayDigit}
-  preset="soft"
   trend={isFilled ? 'up' : 'down'}
   animationKey={`${isFilled ? 'filled' : 'empty'}:${displayDigit}`}
   layoutCorrection={false}
